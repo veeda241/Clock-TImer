@@ -1,0 +1,69 @@
+body {
+    background-color: #0D0221;
+    color: #00f7ff;
+    font-family: 'Orbitron', sans-serif;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    margin: 0;
+    text-align: center;
+}
+
+h1 {
+    font-size: 2.5rem;
+    text-shadow: 0 0 5px #00f7ff;
+}
+
+#timer-display {
+    font-size: 6rem;
+    text-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff, 0 0 30px #00f7ff;
+    margin: 20px;
+}
+
+.controls, .inputs {
+    margin-top: 20px;
+}
+
+input[type="text"] {
+    background-color: transparent;
+    border: 2px solid #00f7ff;
+    color: #00f7ff;
+    padding: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    text-align: center;
+    width: 150px;
+    margin-right: 10px;
+}
+
+button {
+    background-color: transparent;
+    border: 2px solid #00f7ff;
+    color: #00f7ff;
+    padding: 10px 20px;
+    margin: 5px;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 1rem;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+button:hover {
+    background-color: #00f7ff;
+    color: #0D0221;
+    box-shadow: 0 0 10px #00f7ff;
+}
+
+button:disabled {
+    border-color: #555;
+    color: #555;
+    cursor: not-allowed;
+}
+
+button:disabled:hover {
+    background-color: transparent;
+    color: #555;
+    box-shadow: none;
+}
