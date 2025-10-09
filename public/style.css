@@ -1,69 +1,428 @@
 body {
     background-color: #0D0221;
+    background-image: url('Gemini_Generated_Image_f8yskqf8yskqf8ys.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
     color: #00f7ff;
     font-family: 'Orbitron', sans-serif;
+    margin: 0;
+    text-align: center;
+    position: relative; /* Needed for scanline overlay */
+    overflow-x: hidden; /* Prevent horizontal scroll from glitch effect */
+}
+
+/* Scanline Overlay */
+body::before {
+    content: '';
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1) 1px, transparent 1px, transparent 2px);
+    pointer-events: none;
+    z-index: 9999;
+}
+
+.content-wrapper {
+    background-color: rgba(13, 2, 33, 0.9); /* Slightly more opaque */
+    width: 100%;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    box-sizing: border-box;
+    position: relative; /* For z-index context */
+    z-index: 1; /* Ensure content is above scanline */
+}
+
+header {
+    width: 100%;
+    margin-bottom: 20px;
+    animation: neon-glow 1.5s ease-in-out infinite alternate;
+}
+
+.college-header {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+.header-logo {
+    height: 80px;
+    filter: drop-shadow(0 0 5px #00f7ff);
+}
+
+main {
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    height: 100vh;
-    margin: 0;
-    text-align: center;
+    width: 100%;
 }
 
 h1 {
     font-size: 4rem;
-    text-shadow: 0 0 5px #00f7ff;
+    color: #FFD700;
+    font-weight: 700; /* Make it bold */
+    text-shadow: none; /* Removed glow for clarity */
+    margin: 10px 0;
+}
+
+h2, h3 {
+    margin: 5px 0;
+    color: #00f7ff;
+    text-shadow: none; /* Removed glow for clarity */
+}
+
+#timer-container {
+    margin: 20px;
+    border: 2px solid #00f7ff;
+    box-shadow: 0 0 10px rgba(0, 247, 255, 0.5); /* Lower brightness */
+    padding: 10px;
+    border-radius: 10px;
 }
 
 #timer-display {
-    font-size: 6rem;
-    text-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff, 0 0 30px #00f7ff;
-    margin: 20px;
+    display: flex;
+    align-items: baseline;
+    justify-content: center;
 }
 
-.controls, .inputs {
-    margin-top: 20px;
+.time-unit {
+    text-align: center;
+    margin: 0 10px;
+}
+
+.time-unit span {
+    font-size: 6rem;
+    font-weight: 700; /* Make it bold */
+    text-shadow: none; /* Removed glow for clarity */
+    transition: color 0.5s ease, text-shadow 0.5s ease;
+}
+
+.time-label {
+    font-size: 1rem;
+    text-transform: uppercase;
+    color: #FFD700;
+    text-shadow: none; /* Removed glow for clarity */
+}
+
+.time-separator {
+    font-size: 4rem;
+    text-shadow: none; /* Removed glow for clarity */
+    padding-bottom: 30px;
+}
+
+#times-up-display {
+    display: none;
+    font-size: 6rem;
+    color: #ff0000;
+    text-shadow: none; /* Removed glow for clarity */
+    animation: flash 1.5s infinite;
+}
+
+#live-indicator {
+    display: none; /* Hidden by default */
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 15px;
+    font-size: 1.2rem;
+    color: #00ff00; /* Changed to green for 'SYNCED' */
+    text-transform: uppercase;
+    text-shadow: none; /* Removed glow for clarity */
+}
+
+.live-dot {
+    width: 12px;
+    height: 12px;
+    background-color: #00ff00; /* Changed to green */
+    border-radius: 50%;
+    animation: blink 1.2s infinite;
+    box-shadow: 0 0 5px #00ff00;
+}
+
+@keyframes flash {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
+}
+
+@keyframes blink {
+    0%, 100% { transform: scale(1); opacity: 1; }
+    50% { transform: scale(0.9); opacity: 0.7; }
+}
+
+@keyframes glitch {
+    0% { transform: translate(0); }
+    20% { transform: translate(-2px, 2px); }
+    40% { transform: translate(-2px, -2px); }
+    60% { transform: translate(2px, 2px); }
+    80% { transform: translate(2px, -2px); }
+    100% { transform: translate(0); }
+}
+
+@keyframes neon-glow {
+    from { text-shadow: 0 0 5px #00f7ff, 0 0 10px #00f7ff; }
+    to { text-shadow: 0 0 10px #00f7ff, 0 0 20px #00f7ff, 0 0 30px #00f7ff; }
+}
+
+.inputs {
+    margin-top: 10px;
 }
 
 input[type="text"] {
-    background-color: transparent;
+    background-color: rgba(0, 247, 255, 0.1); /* Semi-transparent background */
     border: 2px solid #00f7ff;
     color: #00f7ff;
     padding: 10px;
     font-family: 'Orbitron', sans-serif;
     font-size: 1rem;
     text-align: center;
+    width: 220px; /* Slightly wider */
+    margin: 5px;
+    box-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+    transition: all 0.3s ease;
+}
+
+input[type="text"]:focus {
+    outline: none;
+    box-shadow: 0 0 15px #00f7ff, 0 0 25px #00f7ff;
+    border-color: #FFD700;
+}
+
+.controls {
+    margin-top: 20px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.music-controls {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 20px;
+    width: 100%;
+    max-width: 600px;
+    border-top: 1px solid rgba(0, 247, 255, 0.3);
+    padding-top: 20px;
+}
+
+#volume-slider {
+    -webkit-appearance: none;
+    appearance: none;
     width: 150px;
-    margin-right: 10px;
+    height: 8px; /* Thicker slider */
+    background: rgba(0, 247, 255, 0.2); /* Semi-transparent track */
+    border: 1px solid #00f7ff;
+    border-radius: 5px;
+    outline: none;
+    transition: opacity 0.2s;
+    box-shadow: 0 0 5px rgba(0, 247, 255, 0.5);
+}
+
+#volume-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 24px; /* Larger thumb */
+    height: 24px;
+    background: #00f7ff;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00f7ff, 0 0 15px #00f7ff; /* Enhanced glow */
+    border: 1px solid #0D0221;
+}
+
+#volume-slider::-moz-range-thumb {
+    width: 24px;
+    height: 24px;
+    background: #00f7ff;
+    cursor: pointer;
+    border-radius: 50%;
+    box-shadow: 0 0 8px #00f7ff, 0 0 15px #00f7ff;
+    border: 1px solid #0D0221;
 }
 
 button {
-    background-color: transparent;
+    background-color: rgba(0, 247, 255, 0.1); /* Semi-transparent background */
     border: 2px solid #00f7ff;
     color: #00f7ff;
-    padding: 10px 20px;
-    margin: 5px;
+    padding: 12px 25px; /* Slightly larger padding */
+    margin: 8px; /* Increased margin */
     font-family: 'Orbitron', sans-serif;
-    font-size: 1rem;
+    font-size: 1.1rem; /* Slightly larger font */
     cursor: pointer;
     transition: all 0.3s ease;
+    box-shadow: 0 0 10px rgba(0, 247, 255, 0.5);
+    text-transform: uppercase; /* All caps for buttons */
 }
 
 button:hover {
     background-color: #00f7ff;
     color: #0D0221;
-    box-shadow: 0 0 10px #00f7ff;
+    box-shadow: 0 0 15px #00f7ff, 0 0 25px #00f7ff; /* Enhanced hover glow */
+    transform: translateY(-2px) scale(1.02); /* Subtle lift and scale */
+}
+
+button:active {
+    transform: translateY(1px) scale(0.98);
+    box-shadow: 0 0 8px #00f7ff;
 }
 
 button:disabled {
     border-color: #555;
     color: #555;
     cursor: not-allowed;
+    background-color: rgba(85, 85, 85, 0.1);
+    box-shadow: none;
 }
 
 button:disabled:hover {
-    background-color: transparent;
+    background-color: rgba(85, 85, 85, 0.1);
     color: #555;
     box-shadow: none;
+    transform: none;
+}
+
+#logo {
+    width: 150px; /* Larger logo */
+    margin: 15px 0;
+    filter: drop-shadow(0 0 10px #FFD700);
+}
+
+#mute-btn {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    z-index: 1000;
+    width: 100px; /* Wider mute button */
+    height: 45px; /* Taller mute button */
+    border-radius: 25px;
+    background-color: rgba(0, 247, 255, 0.2);
+    font-size: 0.9rem;
+    box-shadow: 0 0 8px rgba(0, 247, 255, 0.5);
+}
+
+/* Progress Bar */
+.progress-bar-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 85%; /* Slightly wider */
+    max-width: 700px; /* Larger max-width */
+    height: 25px; /* Taller progress bar */
+    background-color: rgba(0, 247, 255, 0.1); /* Semi-transparent background */
+    border: 2px solid #00f7ff;
+    border-radius: 12px;
+    margin-top: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 15px rgba(0, 247, 255, 0.7);
+}
+
+#progress-bar {
+    width: 0%; /* Start empty */
+    height: 100%;
+    background-color: #00f7ff;
+    border-radius: 8px;
+    transition: width 0.5s linear;
+    box-shadow: 0 0 5px #00f7ff; /* Lower brightness */
+}
+
+#progress-percentage {
+    position: absolute;
+    color: white;
+    font-weight: bold;
+    font-size: 0.9rem; /* Slightly larger font */
+    mix-blend-mode: difference;
+    text-shadow: 0 0 5px black;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    h1 {
+        font-size: 3.5rem;
+    }
+    .time-unit span {
+        font-size: 5rem;
+    }
+    .time-separator {
+        font-size: 3.5rem;
+    }
+    #times-up-display {
+        font-size: 5rem;
+    }
+    #logo {
+        width: 120px;
+    }
+    .header-logo {
+        height: 70px;
+    }
+    input[type="text"] {
+        width: 160px;
+    }
+    button {
+        padding: 10px 20px;
+        font-size: 1rem;
+    }
+    #mute-btn {
+        width: 90px;
+        height: 40px;
+        font-size: 0.8rem;
+    }
+    .progress-bar-container {
+        height: 20px;
+    }
+}
+
+@media (max-width: 480px) {
+    h1 {
+        font-size: 2.8rem;
+    }
+    h2 {
+        font-size: 1.1rem;
+    }
+    h3 {
+        font-size: 0.9rem;
+    }
+    .time-unit span {
+        font-size: 3.5rem;
+    }
+    .time-separator {
+        font-size: 2.5rem;
+    }
+    #times-up-display {
+        font-size: 3.5rem;
+    }
+    .controls {
+        flex-direction: column;
+        align-items: center;
+    }
+    button {
+        width: 200px;
+        margin: 5px;
+    }
+    .college-header {
+        gap: 10px;
+    }
+    .header-logo {
+        height: 50px;
+    }
+    #mute-btn {
+        width: 80px;
+        font-size: 0.7rem;
+    }
+    input[type="text"] {
+        width: 140px;
+    }
+    .progress-bar-container {
+        width: 90%;
+    }
 }

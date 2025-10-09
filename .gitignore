@@ -3,3 +3,10 @@
 
 # Old client folder
 /client
+
+.gemini/
+gha-creds-*.json
+
+# Admin app
+/admin/node_modules
+/admin/dist

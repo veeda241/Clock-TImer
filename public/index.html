@@ -3,18 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hackathon Timer</title>
+    <title>Hackathon Chronosync</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <h2>St. Joseph's College of Engineering</h2>
-    <h3>Department of artificial Intelligence</h3>
-    <h1>Hack-AI-Thon</h1>
-    <div id="timer-display">00:00:00</div>
+    <div class="content-wrapper">
+        <header>
+        <div class="college-header">
+            <img src="Engg Logo1.png" alt="Engineering College Logo" class="header-logo">
+            <h2>St. Joseph's College of Engineering</h2>
+            <img src="ads-removebg-preview.png" alt="ADS Department Logo" class="header-logo">
+        </div>
+        <h3>Department of Artificial Intelligence and Data Science</h3>
+        <img src="logo1.png" alt="Hack-AI-Thon Logo" id="logo">
+        <h1 id="hackathon-title">Hack-AI-Thon</h1>
+    </header>
+    <main>
+        <div id="timer-container">
+            <div id="timer-display">
+                <div class="time-unit">
+                    <span id="hours">00</span>
+                    <div class="time-label">Cycles</div>
+                </div>
+                <div class="time-separator">:</div>
+                <div class="time-unit">
+                    <span id="minutes">00</span>
+                    <div class="time-label">Pulses</div>
+                </div>
+                <div class="time-separator">:</div>
+                <div class="time-unit">
+                    <span id="seconds">00</span>
+                    <div class="time-label">Ticks</div>
+                </div>
+            </div>
+            <div id="times-up-display">SEQUENCE COMPLETE</div>
+        </div>
+        <div id="live-indicator">
+            <span class="live-dot"></span>
+            <span>LIVE</span>
+        </div>
+        <div class="progress-bar-container">
+            <div id="progress-bar"></div>
+            <span id="progress-percentage">0%</span>
+        </div>
+    </main>
+    </div>
 
     <script src="timer.js"></script>
+    <audio id="background-music" src="HackAIThon Anthem.mp3" loop></audio>
+    <audio id="final-15-music" src="final_15_mins_music.m4a"></audio>
+    <button id="mute-btn">MUTE</button>
 </body>
 </html>
