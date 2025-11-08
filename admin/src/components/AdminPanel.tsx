@@ -1,20 +1,18 @@
 import { useState, useCallback, useEffect } from 'react';
 
 import { cn } from '@/lib/utils';
-import { writeCloud } from '@/lib/firebase';
-import type { CloudConfig } from '@/lib/firebase';
 
 interface AdminPanelProps {
   currentStartTime: string;
   currentEndTime: string;
-  onSave: (startTime: string, endTime: string, hackathonName: string) => void;
+  hackathonName: string;
+  onSave: (startTime: string, endTime: string, hackathonName: string, background: File | null, logo: File | null) => void;
 }
 
 interface AdminConfig {
   hackathonName: string;
   hackathonStartTime: string;
   hackathonEndTime: string;
-  adminPassword: string;
   isConfigured: boolean;
   lastUpdated: number;
 }
@@ -22,32 +20,30 @@ interface AdminConfig {
 export const AdminPanel = ({
   currentStartTime,
   currentEndTime,
+  hackathonName: initialHackathonName,
   onSave
 }: AdminPanelProps) => {
   const [startDateTime, setStartDateTime] = useState(currentStartTime.slice(0, 16));
   const [endDateTime, setEndDateTime] = useState(currentEndTime.slice(0, 16));
-  const [hackathonName, setHackathonName] = useState('');
-  const [adminPassword, setAdminPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
-  const [passwordInput, setPasswordInput] = useState('');
+  const [hackathonName, setHackathonName] = useState(initialHackathonName);
+  const [background, setBackground] = useState<File | null>(null);
+  const [logo, setLogo] = useState<File | null>(null);
   const [errors, setErrors] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load existing admin config
   useEffect(() => {
-    const savedConfig = localStorage.getItem('adminConfig');
-    if (savedConfig) {
-      try {
-        const config: AdminConfig = JSON.parse(savedConfig);
-        setHackathonName(config.hackathonName || '');
-        setStartDateTime(config.hackathonStartTime?.slice(0, 16) || currentStartTime.slice(0, 16));
-        setEndDateTime(config.hackathonEndTime?.slice(0, 16) || currentEndTime.slice(0, 16));
-        setAdminPassword(config.adminPassword || '');
-      } catch (error) {
-        console.error('Error loading admin config:', error);
-      }
-    }
-  }, [currentStartTime, currentEndTime]);
+    setHackathonName(initialHackathonName);
+  }, [initialHackathonName]);
+  
+  useEffect(() => {
+    setStartDateTime(currentStartTime.slice(0,16));
+  }, [currentStartTime]);
+
+  useEffect(() => {
+    setEndDateTime(currentEndTime.slice(0,16));
+  }, [currentEndTime]);
+
+
 
   // Validate form inputs
   const validateForm = useCallback(() => {
@@ -86,40 +82,11 @@ export const AdminPanel = ({
       }
     }
     
-    if (!adminPassword.trim()) {
-      newErrors.push('Admin password is required');
-    } else if (adminPassword.length < 6) {
-      newErrors.push('Admin password must be at least 6 characters');
-    }
-    
     setErrors(newErrors);
     return newErrors.length === 0;
-  }, [hackathonName, startDateTime, endDateTime, adminPassword]);
+  }, [hackathonName, startDateTime, endDateTime, background, logo]);
 
-  // Handle authentication
-  const handleAuth = useCallback(() => {
-    const savedConfig = localStorage.getItem('adminConfig');
-    if (savedConfig) {
-      try {
-        const config: AdminConfig = JSON.parse(savedConfig);
-        if (config.adminPassword === passwordInput) {
-          setIsAuthenticated(true);
-          setPasswordInput('');
-          return;
-        }
-      } catch (error) {
-        console.error('Error checking password:', error);
-      }
-    }
-    
-    // For demo purposes, also allow a default password
-    if (passwordInput === 'admin123' || passwordInput === adminPassword) {
-      setIsAuthenticated(true);
-      setPasswordInput('');
-    } else {
-      setErrors(['Invalid admin password']);
-    }
-  }, [passwordInput, adminPassword]);
+
 
   // Handle save configuration
   const handleSave = useCallback(async () => {
@@ -132,24 +99,14 @@ export const AdminPanel = ({
         hackathonName: hackathonName.trim(),
         hackathonStartTime: startDateTime + '+05:30', // Add IST timezone
         hackathonEndTime: endDateTime + '+05:30', // Add IST timezone
-        adminPassword: adminPassword,
         isConfigured: true,
         lastUpdated: Date.now()
       };
       
-      // Save to Firebase FIRST (this will trigger listener in Index.tsx)
-      console.log('🔄 Saving to Firebase...');
-      await writeCloud(config as CloudConfig);
-      console.log('✅ Saved to Firebase');
-      
-      // Save to localStorage as backup
-      localStorage.setItem('adminConfig', JSON.stringify(config));
-      console.log('✅ Saved to localStorage');
-      
       // Call the onSave callback
-      onSave(config.hackathonStartTime, config.hackathonEndTime, config.hackathonName);
+      onSave(config.hackathonStartTime, config.hackathonEndTime, config.hackathonName, background, logo);
       
-      console.log('✅ Admin configuration saved to Firebase + localStorage:', config);
+      console.log('✅ Admin configuration saved to server:', config);
       
     } catch (error) {
       console.error('❌ Error saving admin config:', error);
@@ -157,7 +114,7 @@ export const AdminPanel = ({
     } finally {
       setIsLoading(false);
     }
-  }, [validateForm, hackathonName, startDateTime, endDateTime, adminPassword, onSave]);
+  }, [validateForm, hackathonName, startDateTime, endDateTime, background, logo, onSave]);
 
   // Quick preset configurations
   const presetConfigs = [
@@ -207,60 +164,7 @@ export const AdminPanel = ({
   }, []);
 
   return (
-    <div className="bg-card border border-cyber-cyan/30 rounded-lg shadow-cyber-glow max-w-2xl w-full mx-auto my-8">
-          {!isAuthenticated ? (
-            // Authentication Screen
-            <div className="p-6">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl font-cyber font-bold text-cyber-cyan mb-2">
-                  🔐 ADMIN ACCESS REQUIRED
-                </h2>
-                <p className="text-cyber-cyan-dim text-sm">
-                  Enter admin password to configure hackathon settings
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-cyber-cyan mb-2">
-                    Admin Password
-                  </label>
-                  <input
-                    type="password"
-                    value={passwordInput}
-                    onChange={(e) => setPasswordInput(e.target.value)}
-                    onKeyPress={(e) => e.key === 'Enter' && handleAuth()}
-                    className="w-full px-3 py-2 bg-black/50 border border-cyber-cyan/30 rounded text-cyber-cyan focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan"
-                    placeholder="Enter admin password"
-                  />
-                  <p className="text-xs text-cyber-cyan-dim mt-1">
-                    Demo password: admin123
-                  </p>
-                </div>
-
-                {errors.length > 0 && (
-                  <div className="bg-red-500/20 border border-red-500/30 rounded p-3">
-                    {errors.map((error, index) => (
-                      <p key={index} className="text-red-400 text-sm">
-                        ⚠ {error}
-                      </p>
-                    ))}
-                  </div>
-                )}
-
-                <div className="flex gap-3">
-                  <button
-                    onClick={handleAuth}
-                    disabled={!passwordInput.trim()}
-                    className="flex-1 bg-cyber-cyan/20 text-cyber-cyan border border-cyber-cyan/30 px-4 py-2 rounded hover:bg-cyber-cyan/30 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  >
-                    🔓 AUTHENTICATE
-                  </button>
-                </div>
-              </div>
-            </div>
-          ) : (
-            // Admin Configuration Screen
+<div className="bg-card border border-cyber-cyan/30 rounded-lg shadow-cyber-glow max-w-2xl w-full mx-auto my-8">
             <div className="p-6">
               <div className="text-center mb-6">
                 <h2 className="text-2xl font-cyber font-bold text-cyber-cyan mb-2">
@@ -284,6 +188,30 @@ export const AdminPanel = ({
                     className="w-full px-3 py-2 bg-black/50 border border-cyber-cyan/30 rounded text-cyber-cyan focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan"
                     placeholder="e.g., AI Innovation Hackathon 2025"
                   />
+                </div>
+
+                {/* Background and Logo */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-medium text-cyber-cyan mb-2">
+                      Background Image
+                    </label>
+                    <input
+                      type="file"
+                      onChange={(e) => setBackground(e.target.files ? e.target.files[0] : null)}
+                      className="w-full px-3 py-2 bg-black/50 border border-cyber-cyan/30 rounded text-cyber-cyan focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-cyber-cyan mb-2">
+                      Logo Image
+                    </label>
+                    <input
+                      type="file"
+                      onChange={(e) => setLogo(e.target.files ? e.target.files[0] : null)}
+                      className="w-full px-3 py-2 bg-black/50 border border-cyber-cyan/30 rounded text-cyber-cyan focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan"
+                    />
+                  </div>
                 </div>
 
                 {/* Quick Presets */}
@@ -379,19 +307,7 @@ export const AdminPanel = ({
                   </div>
                 )}
 
-                {/* Admin Password */}
-                <div>
-                  <label className="block text-sm font-medium text-cyber-cyan mb-2">
-                    🔐 Admin Password (for future access)
-                  </label>
-                  <input
-                    type="password"
-                    value={adminPassword}
-                    onChange={(e) => setAdminPassword(e.target.value)}
-                    className="w-full px-3 py-2 bg-black/50 border border-cyber-cyan/30 rounded text-cyber-cyan focus:border-cyber-cyan focus:ring-1 focus:ring-cyber-cyan"
-                    placeholder="Set admin password (min 6 characters)"
-                  />
-                </div>
+
 
                 {/* Error Display */}
                 {errors.length > 0 && (
@@ -428,7 +344,6 @@ export const AdminPanel = ({
                 </div>
               </div>
             </div>
-          )}
         </div>
   );
 };

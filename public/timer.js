@@ -28,10 +28,20 @@ async function updateTimer() {
         const mainMusic = document.getElementById('background-music');
         const finalMusic = document.getElementById('final-15-music');
         const hackathonTitleEl = document.getElementById('hackathon-title');
+        const backgroundEl = document.querySelector('.content-wrapper');
+        const logoEl = document.getElementById('logo');
 
         // Update Hackathon Title
         if (hackathonTitleEl && state.hackathonName) {
             hackathonTitleEl.textContent = state.hackathonName;
+        }
+
+        // Update Background and Logo
+        if (backgroundEl && state.background) {
+            backgroundEl.style.backgroundImage = `url(${state.background})`;
+        }
+        if (logoEl && state.logo) {
+            logoEl.src = state.logo;
         }
 
         // Reset client-side flag if timer has been reset

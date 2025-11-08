@@ -1,10 +1,23 @@
 const express = require('express');
 const path = require('path'); // Need path for serving the admin app
+const multer = require('multer');
 const app = express();
 const port = 3000;
 
+// --- Multer Setup ---
+const storage = multer.diskStorage({
+    destination: function (req, file, cb) {
+        cb(null, 'public/uploads/')
+    },
+    filename: function (req, file, cb) {
+        cb(null, file.fieldname + '-' + Date.now() + path.extname(file.originalname))
+    }
+});
+const upload = multer({ storage: storage });
+
 app.use(express.json());
 app.use(express.static('public'));
+app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // --- Serve the new React Admin app ---
 app.use('/admin', express.static(path.join(__dirname, 'admin/dist')));
@@ -19,7 +32,9 @@ let timerState = {
     timeLeft: null, // in ms
     running: false,
     initialDuration: 0, // in ms
-    isFinalMinutes: false
+    isFinalMinutes: false,
+    background: null,
+    logo: null
 };
 
 let countdown;
@@ -44,7 +59,7 @@ function updateTimer() {
 }
 
 // NEW endpoint for the admin panel
-app.post('/timer/config', (req, res) => {
+app.post('/timer/config', upload.fields([{ name: 'background', maxCount: 1 }, { name: 'logo', maxCount: 1 }]), (req, res) => {
     const { hackathonName, hackathonStartTime, hackathonEndTime } = req.body;
 
     if (!hackathonName || !hackathonStartTime || !hackathonEndTime) {
@@ -71,6 +86,14 @@ app.post('/timer/config', (req, res) => {
         paused: false,
         isFinalMinutes: false,
     };
+
+    if (req.files['background']) {
+        timerState.background = '/uploads/' + req.files['background'][0].filename;
+    }
+
+    if (req.files['logo']) {
+        timerState.logo = '/uploads/' + req.files['logo'][0].filename;
+    }
 
     countdown = setInterval(updateTimer, 1000);
     console.log('Timer configured and started:', timerState);
