@@ -1,75 +1,749 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chrono-Control Panel</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Space+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <style>
+        /* ===== RESET ===== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --accent-purple: #b388ff;
+            --accent-violet: #a929ff;
+            --accent-lavender: #9eb1ff;
+            --accent-cyan: #00e5ff;
+            --accent-pink: #ff6ec7;
+            --bg-deep: #080418;
+            --glass-bg: rgba(15, 8, 40, 0.5);
+            --glass-border: rgba(179, 136, 255, 0.18);
+            --glass-blur: 20px;
+            --text-primary: #eee8ff;
+            --text-secondary: rgba(178, 168, 215, 0.7);
+            --metal-gradient: linear-gradient(135deg,
+                    rgba(200, 190, 230, 0.08) 0%, rgba(255, 255, 255, 0.03) 20%,
+                    rgba(120, 100, 180, 0.06) 40%, rgba(255, 255, 255, 0.05) 50%,
+                    rgba(100, 80, 160, 0.06) 60%, rgba(255, 255, 255, 0.03) 80%,
+                    rgba(200, 190, 230, 0.08) 100%);
+            --metal-shine: linear-gradient(170deg,
+                    rgba(255, 255, 255, 0.06) 0%, transparent 40%, transparent 60%, rgba(255, 255, 255, 0.03) 100%);
+        }
+
+        body {
+            background: var(--bg-deep);
+            font-family: 'Rajdhani', sans-serif;
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 30px 20px;
+            overflow-y: auto;
+            background-image:
+                radial-gradient(ellipse at 20% 50%, rgba(169, 41, 255, 0.08) 0%, transparent 60%),
+                radial-gradient(ellipse at 80% 20%, rgba(158, 177, 255, 0.06) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(92, 20, 168, 0.06) 0%, transparent 50%);
+        }
+
+        /* ===== MAIN CONTAINER ===== */
+        .control-container {
+            width: 100%;
+            max-width: 700px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            animation: fadeIn 0.6s ease-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ===== GLASS CARD ===== */
+        .glass-card {
+            background: var(--metal-shine), var(--metal-gradient), var(--glass-bg);
+            backdrop-filter: blur(var(--glass-blur));
+            -webkit-backdrop-filter: blur(var(--glass-blur));
+            border: 1px solid var(--glass-border);
+            border-top: 1px solid rgba(255, 255, 255, 0.08);
+            border-radius: 20px;
+            padding: 24px 28px;
+            box-shadow:
+                0 8px 32px rgba(169, 41, 255, 0.08),
+                0 2px 8px rgba(0, 0, 0, 0.3),
+                inset 0 1px 0 rgba(255, 255, 255, 0.05),
+                inset 0 -1px 0 rgba(0, 0, 0, 0.15);
+        }
+
+        /* ===== HEADER ===== */
+        .header-card {
+            text-align: center;
+        }
+
+        .header-card .brand-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .header-card .brand-logo {
+            height: 50px;
+            width: auto;
+            filter: drop-shadow(0 0 6px rgba(179, 136, 255, 0.3));
+        }
+
+        .header-card .brand-name {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.7rem;
+            font-weight: 600;
+            letter-spacing: 2px;
+            color: var(--text-secondary);
+        }
+
+        .header-card .panel-title {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 800;
+            letter-spacing: 3px;
+            background: linear-gradient(135deg, var(--accent-purple), var(--accent-lavender), var(--accent-pink));
+            background-size: 200% 200%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 4s ease infinite;
+            margin-top: 8px;
+        }
+
+        @keyframes shimmer {
+
+            0%,
+            100% {
+                background-position: 0% 50%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+        }
+
+        .header-card .panel-subtitle {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            color: var(--text-secondary);
+            margin-top: 6px;
+        }
+
+        /* ===== STATUS SECTION ===== */
+        .status-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 16px;
+            border-radius: 50px;
+            background: rgba(15, 8, 40, 0.6);
+            border: 1px solid rgba(179, 136, 255, 0.15);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 2px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent-pink);
+            box-shadow: 0 0 8px var(--accent-pink);
+        }
+
+        .status-dot.active {
+            background: #00ff88;
+            box-shadow: 0 0 8px #00ff88;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.paused {
+            background: #ffc800;
+            box-shadow: 0 0 8px #ffc800;
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ===== TIMER DISPLAY ===== */
+        .timer-display-card {
+            text-align: center;
+        }
+
+        .timer-row {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+        }
+
+        .timer-digit-group {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .timer-digits {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 4.5rem;
+            font-weight: 900;
+            color: var(--text-primary);
+            text-shadow: 0 0 30px rgba(179, 136, 255, 0.4);
+            line-height: 1;
+            min-width: 140px;
+            letter-spacing: 4px;
+        }
+
+        .timer-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 4px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .timer-sep {
+            font-family: 'Orbitron', sans-serif;
+            font-size: 3.5rem;
+            color: var(--accent-purple);
+            opacity: 0.4;
+            animation: sepPulse 2s ease-in-out infinite;
+            margin-top: -20px;
+        }
+
+        @keyframes sepPulse {
+
+            0%,
+            100% {
+                opacity: 0.4;
+            }
+
+            50% {
+                opacity: 0.15;
+            }
+        }
+
+        #times-up-display {
+            display: none;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            letter-spacing: 6px;
+            background: linear-gradient(90deg, var(--accent-pink), var(--accent-violet), var(--accent-pink));
+            background-size: 200% 100%;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shimmer 2s ease infinite;
+            text-align: center;
+            padding: 20px 0;
+        }
+
+        /* ===== INPUT SECTION ===== */
+        .input-section {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .section-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+        }
+
+        .time-input {
+            width: 100%;
+            padding: 14px 20px;
+            background: rgba(10, 5, 25, 0.6);
+            border: 1px solid var(--glass-border);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 600;
+            letter-spacing: 6px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .time-input::placeholder {
+            font-family: 'Rajdhani', sans-serif;
+            font-size: 0.9rem;
+            letter-spacing: 2px;
+            color: rgba(178, 168, 215, 0.35);
+        }
+
+        .time-input:focus {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 20px rgba(179, 136, 255, 0.15);
+        }
+
+        /* Presets */
+        .presets-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .preset-btn {
+            flex: 1;
+            min-width: 80px;
+            padding: 8px 12px;
+            background: rgba(179, 136, 255, 0.06);
+            border: 1px solid rgba(179, 136, 255, 0.12);
+            border-radius: 10px;
+            color: var(--accent-lavender);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+
+        .preset-btn:hover {
+            background: rgba(179, 136, 255, 0.12);
+            border-color: var(--accent-purple);
+            transform: translateY(-1px);
+        }
+
+        .preset-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ===== CONTROLS ===== */
+        .controls-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 12px;
+        }
+
+        .ctrl-btn {
+            padding: 14px 20px;
+            border: 1px solid;
+            border-radius: 14px;
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.75rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ctrl-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .ctrl-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .ctrl-btn.start {
+            background: rgba(0, 255, 136, 0.08);
+            border-color: rgba(0, 255, 136, 0.3);
+            color: #00ff88;
+            box-shadow: 0 4px 20px rgba(0, 255, 136, 0.08);
+        }
+
+        .ctrl-btn.start:hover:not(:disabled) {
+            background: rgba(0, 255, 136, 0.15);
+            box-shadow: 0 4px 30px rgba(0, 255, 136, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .ctrl-btn.pause {
+            background: rgba(255, 200, 0, 0.08);
+            border-color: rgba(255, 200, 0, 0.3);
+            color: #ffc800;
+            box-shadow: 0 4px 20px rgba(255, 200, 0, 0.08);
+        }
+
+        .ctrl-btn.pause:hover:not(:disabled) {
+            background: rgba(255, 200, 0, 0.15);
+            box-shadow: 0 4px 30px rgba(255, 200, 0, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .ctrl-btn.reset {
+            background: rgba(255, 110, 199, 0.08);
+            border-color: rgba(255, 110, 199, 0.3);
+            color: var(--accent-pink);
+            box-shadow: 0 4px 20px rgba(255, 110, 199, 0.08);
+        }
+
+        .ctrl-btn.reset:hover:not(:disabled) {
+            background: rgba(255, 110, 199, 0.15);
+            box-shadow: 0 4px 30px rgba(255, 110, 199, 0.15);
+            transform: translateY(-2px);
+        }
+
+        /* ===== ADD TIME BUTTONS ===== */
+        .add-time-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+
+        .add-btn {
+            padding: 14px 20px;
+            border: 1px solid rgba(0, 229, 255, 0.25);
+            border-radius: 14px;
+            border-top: 1px solid rgba(255, 255, 255, 0.06);
+            background: rgba(0, 229, 255, 0.06);
+            font-family: 'Orbitron', sans-serif;
+            font-size: 0.8rem;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--accent-cyan);
+            cursor: pointer;
+            transition: all 0.25s ease;
+            text-transform: uppercase;
+            box-shadow: 0 4px 20px rgba(0, 229, 255, 0.06);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .add-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(180deg, rgba(255, 255, 255, 0.06) 0%, transparent 50%);
+            pointer-events: none;
+        }
+
+        .add-btn:hover {
+            background: rgba(0, 229, 255, 0.12);
+            border-color: rgba(0, 229, 255, 0.4);
+            box-shadow: 0 4px 30px rgba(0, 229, 255, 0.12);
+            transform: translateY(-2px);
+        }
+
+        .add-btn:active {
+            transform: translateY(0);
+        }
+
+        /* ===== AUDIO CONTROLS ===== */
+        .audio-section {
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+
+        .audio-row {
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+
+        .audio-btn {
+            padding: 10px 20px;
+            background: rgba(158, 177, 255, 0.06);
+            border: 1px solid rgba(158, 177, 255, 0.15);
+            border-radius: 12px;
+            color: var(--accent-lavender);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.7rem;
+            letter-spacing: 2px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .audio-btn:hover {
+            background: rgba(158, 177, 255, 0.12);
+            border-color: var(--accent-lavender);
+            transform: translateY(-1px);
+        }
+
+        .volume-slider-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .vol-label {
+            font-family: 'Space Mono', monospace;
+            font-size: 0.6rem;
+            letter-spacing: 1px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+        }
+
+        input[type="range"] {
+            flex: 1;
+            -webkit-appearance: none;
+            appearance: none;
+            height: 4px;
+            background: rgba(179, 136, 255, 0.15);
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-purple);
+            box-shadow: 0 0 10px rgba(179, 136, 255, 0.4);
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.2);
+        }
+
+        input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-purple);
+            box-shadow: 0 0 10px rgba(179, 136, 255, 0.4);
+            border: none;
+            cursor: pointer;
+        }
+
+        /* ===== LIVE INDICATOR ===== */
+        #live-indicator {
+            display: none;
+            align-items: center;
+            gap: 8px;
+            font-family: 'Space Mono', monospace;
+            font-size: 0.65rem;
+            letter-spacing: 3px;
+            color: #00ff88;
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00ff88;
+            box-shadow: 0 0 8px #00ff88;
+            animation: pulse 1.5s infinite;
+        }
+
+        /* ===== MUTE BUTTON ===== */
+        #mute-btn {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px);
+            border: 1px solid var(--glass-border);
+            color: var(--accent-purple);
+            font-family: 'Space Mono', monospace;
+            font-size: 0.5rem;
+            letter-spacing: 1px;
+            cursor: pointer;
+            z-index: 100;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #mute-btn:hover {
+            border-color: var(--accent-purple);
+            box-shadow: 0 0 20px rgba(179, 136, 255, 0.2);
+            transform: scale(1.1);
+        }
+
+        /* ===== RESPONSIVE ===== */
+        @media (max-width: 600px) {
+            body {
+                padding: 15px 10px;
+            }
+
+            .timer-digits {
+                font-size: 2.8rem;
+                min-width: 90px;
+            }
+
+            .timer-sep {
+                font-size: 2rem;
+            }
+
+            .controls-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .header-card .panel-title {
+                font-size: 1.2rem;
+            }
+        }
+    </style>
 </head>
+
 <body>
-    <div class="content-wrapper">
-        <header>
-        <div class="college-header">
-            <img src="Engg Logo1.png" alt="Engineering College Logo" class="header-logo">
-            <h2>St. Joseph's Group of institution</h2>
-            <h2>St. Joseph's College of Engineering</h2>
-            <img src="ads-removebg-preview.png" alt="ADS Department Logo" class="header-logo">
+    <div class="control-container">
+
+        <!-- Header -->
+        <div class="glass-card header-card">
+            <div class="brand-row">
+                <img src="Engg Logo1.png" alt="College" class="brand-logo">
+                <div>
+                    <div class="brand-name">ST. JOSEPH'S COLLEGE OF ENGINEERING</div>
+                    <div class="brand-name" style="opacity: 0.6; font-size: 0.55rem;">DEPT. OF ARTIFICIAL INTELLIGENCE &
+                        DATA SCIENCE</div>
+                </div>
+                <img src="ads-removebg-preview.png" alt="ADS" class="brand-logo">
+            </div>
+            <div class="panel-title">CHRONO CONTROL</div>
+            <div class="panel-subtitle">TIMER MANAGEMENT CONSOLE</div>
         </div>
-        <h3>Department of Artificial Intelligence and Data Science</h3>
-        <img src="logo1.png" alt="Hack-AI-Thon Logo" id="logo">
-        <h1>Hack-AI-Thon</h1>
-    </header>
-    <main>
-        <h2>Chrono-Control</h2>
-        <div id="timer-container">
-            <div id="timer-display">
-                <div class="time-unit">
-                    <span id="hours">00</span>
-                    <div class="time-label">Cycles</div>
+
+        <!-- Timer Display -->
+        <div class="glass-card timer-display-card">
+            <div class="status-row" style="margin-bottom: 16px;">
+                <div class="status-badge">
+                    <span class="status-dot" id="status-dot"></span>
+                    <span id="status-text">OFFLINE</span>
                 </div>
-                <div class="time-separator">:</div>
-                <div class="time-unit">
-                    <span id="minutes">00</span>
-                    <div class="time-label">Pulses</div>
-                </div>
-                <div class="time-separator">:</div>
-                <div class="time-unit">
-                    <span id="seconds">00</span>
-                    <div class="time-label">Ticks</div>
+                <div id="live-indicator">
+                    <span class="live-dot"></span>
+                    <span>LIVE</span>
                 </div>
             </div>
-            <div id="times-up-display">SEQUENCE COMPLETE</div>
-        </div>
-        <div id="live-indicator">
-            <span class="live-dot"></span>
-            <span>LIVE</span>
+
+            <div id="timer-container">
+                <div id="timer-display" class="timer-row">
+                    <div class="timer-digit-group">
+                        <span class="timer-digits" id="hours">00</span>
+                        <span class="timer-label">HOURS</span>
+                    </div>
+                    <span class="timer-sep">:</span>
+                    <div class="timer-digit-group">
+                        <span class="timer-digits" id="minutes">00</span>
+                        <span class="timer-label">MINUTES</span>
+                    </div>
+                    <span class="timer-sep">:</span>
+                    <div class="timer-digit-group">
+                        <span class="timer-digits" id="seconds">00</span>
+                        <span class="timer-label">SECONDS</span>
+                    </div>
+                </div>
+                <div id="times-up-display">SEQUENCE COMPLETE</div>
+            </div>
         </div>
 
-        <div class="inputs">
-            <input type="text" id="timeInput" placeholder="Set Chrono-Sequence (CC:PP:TT)">
+        <!-- Input & Presets -->
+        <div class="glass-card input-section">
+            <div class="section-label">SET DURATION</div>
+            <input type="text" id="timeInput" class="time-input" placeholder="HH : MM : SS">
+            <div class="section-label">QUICK PRESETS</div>
+            <div class="presets-row">
+                <button class="preset-btn" data-duration="00:15:00">15 MIN</button>
+                <button class="preset-btn" data-duration="00:30:00">30 MIN</button>
+                <button class="preset-btn" data-duration="01:00:00">1 HR</button>
+                <button class="preset-btn" data-duration="02:00:00">2 HR</button>
+                <button class="preset-btn" data-duration="04:00:00">4 HR</button>
+                <button class="preset-btn" data-duration="08:00:00">8 HR</button>
+            </div>
         </div>
 
-        <div class="controls">
-            <button id="startBtn">Initiate</button>
-            <button id="pauseBtn">Suspend</button>
-            <button id="resetBtn">Nullify</button>
+        <!-- Controls -->
+        <div class="glass-card">
+            <div class="section-label" style="margin-bottom: 14px;">TIMER CONTROLS</div>
+            <div class="controls-grid">
+                <button id="startBtn" class="ctrl-btn start">▶ START</button>
+                <button id="pauseBtn" class="ctrl-btn pause">⏸ PAUSE</button>
+                <button id="resetBtn" class="ctrl-btn reset">⏹ RESET</button>
+            </div>
         </div>
 
-        <div class="music-controls">
-            <button id="music-play-pause-btn">Engage/Disengage Audio</button>
-            <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+        <!-- Extend Time -->
+        <div class="glass-card">
+            <div class="section-label" style="margin-bottom: 14px;">EXTEND TIME</div>
+            <div class="add-time-grid">
+                <button class="add-btn" id="add15Btn">+ 15 MIN</button>
+                <button class="add-btn" id="add1hrBtn">+ 1 HOUR</button>
+            </div>
         </div>
 
+        <!-- Audio -->
+        <div class="glass-card audio-section">
+            <div class="section-label">AUDIO CONTROLS</div>
+            <div class="audio-row">
+                <button id="music-play-pause-btn" class="audio-btn">♪ PLAY / PAUSE</button>
+                <div class="volume-slider-wrap">
+                    <span class="vol-label">VOL</span>
+                    <input type="range" id="volume-slider" min="0" max="1" step="0.01" value="1">
+                </div>
+            </div>
+        </div>
 
-    </main>
     </div>
 
-    <script src="control.js"></script>
     <audio id="background-music" src="HackAIThon Anthem.mp3" loop></audio>
     <audio id="final-15-music" src="final_15_mins_music.m4a"></audio>
-    <button id="mute-btn">MUTE</button>
+    <button id="mute-btn">♪</button>
+
+    <script src="control.js"></script>
 </body>
+
 </html>

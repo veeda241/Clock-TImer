@@ -16,16 +16,37 @@ const storage = multer.diskStorage({
 const upload = multer({ storage: storage });
 
 app.use(express.json());
+
+// Serve the logo file directly due to naming issues (must be before static middleware)
+app.get('/logo.jpeg', (req, res) => {
+    const fs = require('fs');
+    const files = fs.readdirSync(__dirname);
+    const logo = files.find(f => f.startsWith('impact') && f.endsWith('.jpeg'));
+    if (logo) {
+        res.sendFile(path.join(__dirname, logo));
+    } else {
+        res.status(404).send('Logo not found');
+    }
+});
+
+app.use(express.static('client/dist'));
 app.use(express.static('public'));
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+});
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
 // --- Serve the new React Admin app ---
 app.use('/admin', express.static(path.join(__dirname, 'admin/dist')));
-// Handle all requests to /admin or its sub-routes by serving the React app\'s index.html\n// We use a regular expression here because the project\'s routing library version has\n// issues with standard wildcard strings.\napp.get(/^\/admin(\/.*)?$/, (req, res) => {\n    res.sendFile(path.join(__dirname, \'admin/dist/index.html\'));\n});
-
+// Handle all requests to /admin or its sub-routes by serving the React app's index.html
+// We use a regular expression here because the project's routing library version has
+// issues with standard wildcard strings.
+app.get(/^\/admin(\/.*)?$/, (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin/dist/index.html'));
+});
 
 let timerState = {
-    hackathonName: "Hack-AI-Thon",
+    hackathonName: "Impact AI Thon",
     startTime: null, // ISO String
     endTime: null, // ISO String
     paused: false,
@@ -151,6 +172,36 @@ app.post('/timer/reset', (req, res) => {
     timerState.endTime = null;
     timerState.initialDuration = 0;
     timerState.timeLeft = null;
+
+    res.json(timerState);
+});
+
+app.post('/timer/add', (req, res) => {
+    const { ms } = req.body; // milliseconds to add
+    if (!ms || ms <= 0) {
+        return res.status(400).json({ error: 'Positive milliseconds value required.' });
+    }
+
+    if (timerState.running) {
+        // Extend the end time
+        const currentEnd = new Date(timerState.endTime).getTime();
+        timerState.endTime = new Date(currentEnd + ms).toISOString();
+        timerState.initialDuration += ms;
+        timerState.timeLeft += ms;
+    } else {
+        // If not running, set a new duration
+        const now = Date.now();
+        const totalMs = (timerState.timeLeft || 0) + ms;
+        timerState.initialDuration = totalMs;
+        timerState.startTime = new Date(now).toISOString();
+        timerState.endTime = new Date(now + totalMs).toISOString();
+        timerState.timeLeft = totalMs;
+        timerState.running = true;
+        timerState.paused = false;
+        timerState.isFinalMinutes = false;
+        clearInterval(countdown);
+        countdown = setInterval(updateTimer, 1000);
+    }
 
     res.json(timerState);
 });
