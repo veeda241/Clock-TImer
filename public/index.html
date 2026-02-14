@@ -40,69 +40,68 @@
         </header>
 
         <!-- Main Timer -->
-        <main class="timer-section">
-            <div id="live-indicator" class="status-pill pulse-green">
-                <span class="dot"></span>
-                <span class="status-text">SYSTEM ONLINE</span>
-            </div>
+        <div id="live-indicator" class="status-pill pulse-green">
+            <span class="dot"></span>
+            <span class="status-text">SYSTEM ONLINE</span>
+        </div>
 
-            <div id="timer-container" class="timer-grid">
-                <!-- Hours -->
-                <div class="timer-card">
-                    <div class="ring-container">
-                        <svg class="progress-ring" width="220" height="220">
-                            <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="6"
-                                fill="transparent" r="90" cx="110" cy="110" />
-                            <circle id="ring-hours" class="progress-ring__circle" stroke="#b388ff" stroke-width="6"
-                                fill="transparent" r="90" cx="110" cy="110" />
-                        </svg>
-                        <div class="time-value-wrapper">
-                            <span id="hours">00</span>
-                            <span class="label">HOURS</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="separator">:</div>
-
-                <!-- Minutes -->
-                <div class="timer-card">
-                    <div class="ring-container">
-                        <svg class="progress-ring" width="220" height="220">
-                            <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="6"
-                                fill="transparent" r="90" cx="110" cy="110" />
-                            <circle id="ring-minutes" class="progress-ring__circle" stroke="#00e5ff" stroke-width="6"
-                                fill="transparent" r="90" cx="110" cy="110" />
-                        </svg>
-                        <div class="time-value-wrapper">
-                            <span id="minutes">00</span>
-                            <span class="label">MINUTES</span>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="separator">:</div>
-
-                <!-- Seconds -->
-                <div class="timer-card">
-                    <div class="ring-container">
-                        <svg class="progress-ring" width="220" height="220">
-                            <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="6"
-                                fill="transparent" r="90" cx="110" cy="110" />
-                            <circle id="ring-seconds" class="progress-ring__circle" stroke="#ff4081" stroke-width="6"
-                                fill="transparent" r="90" cx="110" cy="110" />
-                        </svg>
-                        <div class="time-value-wrapper">
-                            <span id="seconds">00</span>
-                            <span class="label">SECONDS</span>
-                        </div>
+        <div id="timer-container" class="timer-grid">
+            <!-- Hours -->
+            <div class="timer-card">
+                <div class="ring-container">
+                    <svg class="progress-ring" width="220" height="220">
+                        <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="6"
+                            fill="transparent" r="90" cx="110" cy="110" />
+                        <circle id="ring-hours" class="progress-ring__circle" stroke="#b388ff" stroke-width="6"
+                            fill="transparent" r="90" cx="110" cy="110" />
+                    </svg>
+                    <div class="time-value-wrapper">
+                        <span id="hours">00</span>
+                        <span class="label">HOURS</span>
                     </div>
                 </div>
             </div>
 
-            <div id="times-up-display" class="hidden">
-                <h2 class="glitch" data-text="TIME EXPIRED">TIME EXPIRED</h2>
+            <div class="separator">:</div>
+
+            <!-- Minutes -->
+            <div class="timer-card">
+                <div class="ring-container">
+                    <svg class="progress-ring" width="220" height="220">
+                        <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="6"
+                            fill="transparent" r="90" cx="110" cy="110" />
+                        <circle id="ring-minutes" class="progress-ring__circle" stroke="#00e5ff" stroke-width="6"
+                            fill="transparent" r="90" cx="110" cy="110" />
+                    </svg>
+                    <div class="time-value-wrapper">
+                        <span id="minutes">00</span>
+                        <span class="label">MINUTES</span>
+                    </div>
+                </div>
             </div>
+
+            <div class="separator">:</div>
+
+            <!-- Seconds -->
+            <div class="timer-card">
+                <div class="ring-container">
+                    <svg class="progress-ring" width="220" height="220">
+                        <circle class="progress-ring__circle-bg" stroke="rgba(255,255,255,0.05)" stroke-width="6"
+                            fill="transparent" r="90" cx="110" cy="110" />
+                        <circle id="ring-seconds" class="progress-ring__circle" stroke="#ff4081" stroke-width="6"
+                            fill="transparent" r="90" cx="110" cy="110" />
+                    </svg>
+                    <div class="time-value-wrapper">
+                        <span id="seconds">00</span>
+                        <span class="label">SECONDS</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="times-up-display" class="hidden">
+            <h2 class="glitch" data-text="TIME EXPIRED">TIME EXPIRED</h2>
+        </div>
         </main>
 
         <!-- Footer / Status -->
