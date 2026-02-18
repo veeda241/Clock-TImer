@@ -60,6 +60,7 @@ startBtn.addEventListener('click', () => {
         duration = duration.replace(/[ .]/g, ':');
     }
     postCommand('start', { duration });
+    timeInput.value = '';
 
     const music = document.getElementById('background-music');
     if (music && music.paused) {
@@ -219,6 +220,7 @@ presetBtns.forEach(btn => {
         timeInput.value = duration;
         // Changed to use 'set' command
         postCommand('set', { duration });
+        timeInput.value = '';
 
         const music = document.getElementById('background-music');
         if (music && music.paused) {

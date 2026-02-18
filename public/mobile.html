@@ -560,6 +560,27 @@
 
         let socket;
 
+        // SMART CLEANUP: If page is served over HTTPS (e.g. Render deployment)
+        // but localStorage has a local/private IP, clear it — it's stale.
+        if (SERVER && window.location.protocol === 'https:') {
+            try {
+                const savedHost = new URL(SERVER).hostname;
+                const isPrivate = savedHost.startsWith('10.') ||
+                    savedHost.startsWith('192.168.') ||
+                    savedHost.startsWith('172.') ||
+                    savedHost === 'localhost' ||
+                    savedHost === '127.0.0.1';
+                if (isPrivate || new URL(SERVER).protocol === 'http:') {
+                    console.log('Clearing stale local server URL:', SERVER);
+                    localStorage.removeItem('server_url');
+                    SERVER = null;
+                }
+            } catch (e) {
+                localStorage.removeItem('server_url');
+                SERVER = null;
+            }
+        }
+
         // AUTO-DETECT: If the page is served from the actual server (not a file://),
         // use the current origin automatically — no localStorage needed.
         if (!SERVER && window.location.protocol !== 'file:' && window.location.hostname !== '') {
@@ -809,6 +830,7 @@
                 });
                 if (!res.ok) throw new Error('Failed');
                 showToast(action.toUpperCase() + ' ✓', false);
+                document.getElementById('durationInput').value = '';
                 fetchState();
             } catch (e) {
                 showToast('ERROR — check server', true);
@@ -837,6 +859,7 @@
                 });
                 if (!res.ok) throw new Error();
                 showToast('TIME SET ✓', false);
+                document.getElementById('durationInput').value = '';
                 fetchState();
             } catch {
                 showToast('ERROR — check format', true);

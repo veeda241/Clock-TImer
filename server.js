@@ -15,6 +15,12 @@ const io = new Server(server, {
 });
 
 app.use(cors());
+
+// Serve a simple favicon to prevent 404
+app.get('/favicon.ico', (req, res) => {
+    res.type('image/svg+xml').send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y=".9em" font-size="90">⏱️</text></svg>');
+});
+
 const port = process.env.PORT || 3000;
 
 // --- Multer Setup ---
