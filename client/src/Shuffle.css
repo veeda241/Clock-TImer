@@ -1,0 +1,12 @@
+.shuffle-parent {
+    display: inline-block;
+    white-space: normal;
+    word-wrap: break-word;
+    line-height: 1;
+    visibility: visible;
+    letter-spacing: 2px;
+}
+
+.shuffle-parent.is-ready {
+    visibility: visible;
+}
