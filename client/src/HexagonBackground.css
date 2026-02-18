@@ -6,7 +6,8 @@
     height: 100%;
     overflow: hidden;
     pointer-events: none;
-    z-index: 0;
+    z-index: -2;
+    /* Pushed back behind UI */
 }
 
 .hexagon-background .hex-grid {
@@ -57,4 +58,28 @@
 .hexagon-background .hexagon:hover::after {
     background: rgba(20, 10, 40, 0.5);
     transition-duration: 0s;
+}
+
+@keyframes hexPulse {
+
+    0%,
+    100% {
+        opacity: 0.3;
+    }
+
+    50% {
+        opacity: 0.8;
+    }
+}
+
+.hexagon-background .hexagon:nth-child(5n)::before {
+    animation: hexPulse 4s infinite ease-in-out;
+}
+
+.hexagon-background .hexagon:nth-child(7n)::before {
+    animation: hexPulse 6s infinite ease-in-out 1s;
+}
+
+.hexagon-background .hexagon:nth-child(11n)::before {
+    animation: hexPulse 5s infinite ease-in-out 2s;
 }

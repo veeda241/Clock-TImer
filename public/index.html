@@ -138,6 +138,18 @@
     <div id="video-overlay" style="display: none;">
         <video id="end-video" src="loading-screen.mp4" playsinline></video>
     </div>
+
+    <!-- Login Button -->
+    <a id="admin-login-btn" class="admin-login-btn" href="#">LOGIN</a>
+
+    <!-- Login Modal -->
+    <div id="login-modal-overlay" class="login-modal-overlay">
+        <div class="login-modal">
+            <h3>SYSTEM ACCESS</h3>
+            <input type="password" id="admin-password" placeholder="ENTER PASSCODE" autofocus>
+            <button id="login-submit-btn">AUTHENTICATE</button>
+        </div>
+    </div>
     <style>
         #video-overlay {
             position: fixed;

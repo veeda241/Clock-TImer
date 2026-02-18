@@ -657,11 +657,12 @@
         function handleUpdate(data) {
             serverEndTime = data.endTime;
             serverRunning = data.running;
+            serverPaused = data.paused || false;
             serverRemaining = data.timeLeft;
 
             // Directly update display
             updateDisplay({
-                isRunning: serverRunning,
+                isRunning: serverRunning && !serverPaused,
                 endTime: serverEndTime,
                 remainingTime: serverRemaining
             });
@@ -850,6 +851,7 @@
         // ── SMOOTH TICK ──
         let serverEndTime = null;
         let serverRunning = false;
+        let serverPaused = false;
         let serverRemaining = 0;
 
         // Ticking logic removed as socket provides updates per second
@@ -860,12 +862,9 @@
 
         setInterval(() => {
             if (!SERVER) return;
-            // logic to smooth out seconds if needed
-            // currently socket sends tick every second
-            // so we might not need this unless we want ms precision locally
             const now = Date.now();
             let remaining = 0;
-            if (serverRunning && serverEndTime) {
+            if (serverRunning && !serverPaused && serverEndTime) {
                 // Parse ISO string
                 const end = new Date(serverEndTime).getTime();
                 remaining = Math.max(0, end - now);

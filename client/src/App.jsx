@@ -137,6 +137,20 @@ function App() {
         }
     }, [timesUp]);
 
+    // Login State
+    const [isAdminLoginOpen, setIsAdminLoginOpen] = useState(false);
+    const [password, setPassword] = useState('');
+
+    const handleLogin = (e) => {
+        e.preventDefault();
+        // Simple hardcoded check for now, can be sophisticated later
+        if (password === 'admin') {
+            window.location.href = '/mobile.html';
+        } else {
+            alert('Access Denied: Invalid Credentials');
+        }
+    };
+
     return (
         <>
             {/* Full-screen video overlay when timer ends */}
@@ -156,46 +170,111 @@ function App() {
                 </div>
             )}
 
-            {/* Background layers */}
-            <div style={{
-                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -1,
-                opacity: timesUp ? 0.15 : 1, transition: 'opacity 1s ease'
-            }}>
-                <Grainient
-                    color1="#4a5280"
-                    color2="#5c14a8"
-                    color3="#3d2d6b"
-                    timeSpeed={0.25}
-                    colorBalance={0}
-                    warpStrength={1}
-                    warpFrequency={5}
-                    warpSpeed={2}
-                    warpAmplitude={50}
-                    blendAngle={0}
-                    blendSoftness={0.05}
-                    rotationAmount={500}
-                    noiseScale={2}
-                    grainAmount={0.1}
-                    grainScale={2}
-                    grainAnimated={false}
-                    contrast={1.2}
-                    gamma={0.85}
-                    saturation={0.8}
-                    centerX={0}
-                    centerY={0}
-                    zoom={0.9}
-                />
-            </div>
+            {/* Login Button */}
+            <button className="admin-login-btn" onClick={() => setIsAdminLoginOpen(true)}>
+                LOGIN
+            </button>
 
-            {/* Dark overlay to deepen the background */}
+            {/* Login Modal */}
+            {isAdminLoginOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.8)', zIndex: 2000,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(5px)'
+                }} onClick={() => setIsAdminLoginOpen(false)}>
+                    <div onClick={e => e.stopPropagation()} style={{
+                        background: 'rgba(20, 10, 40, 0.9)',
+                        border: '1px solid var(--accent-purple)',
+                        padding: '40px', borderRadius: '16px',
+                        display: 'flex', flexDirection: 'column', gap: '20px',
+                        width: '300px',
+                        boxShadow: '0 0 40px rgba(169, 41, 255, 0.2)'
+                    }}>
+                        <h3 style={{
+                            fontFamily: 'Orbitron', color: '#fff', textAlign: 'center',
+                            letterSpacing: '2px', fontSize: '1.5rem'
+                        }}>SYSTEM ACCESS</h3>
+                        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <input
+                                type="password"
+                                placeholder="ENTER PASSCODE"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                autoFocus
+                                style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: '#fff', padding: '12px',
+                                    borderRadius: '8px', outline: 'none',
+                                    fontFamily: 'Space Mono', letterSpacing: '2px',
+                                    textAlign: 'center'
+                                }}
+                            />
+                            <button type="submit" style={{
+                                background: 'var(--accent-purple)',
+                                color: '#000', border: 'none',
+                                padding: '12px', borderRadius: '8px',
+                                fontFamily: 'Orbitron', fontWeight: 'bold',
+                                cursor: 'pointer', letterSpacing: '1px'
+                            }}>
+                                AUTHENTICATE
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
+
+            {/* Animated gradient background */}
             <div style={{
-                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
-                background: 'rgba(5, 2, 18, 0.45)',
-                zIndex: 0,
-                pointerEvents: 'none'
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -10,
+                background: 'linear-gradient(135deg, #0a0514 0%, #1a0a2e 25%, #0d0620 50%, #160835 75%, #0a0514 100%)',
+                backgroundSize: '400% 400%',
+                animation: 'bgShift 15s ease infinite',
             }} />
 
-            <HexagonBackground hexagonSize={75} hexagonMargin={3} />
+            {/* Watermark logo */}
+            <div style={{
+                position: 'fixed', top: '50%', left: '50%', transform: 'translate(-50%, -50%)',
+                zIndex: -5, opacity: 0.04, pointerEvents: 'none',
+            }}>
+                <img src={state.logo || "/logo.jpeg"} alt="" style={{
+                    width: '400px', height: '400px', objectFit: 'contain',
+                    filter: 'grayscale(100%) brightness(2)',
+                }} />
+            </div>
+
+            {/* Subtle grid overlay */}
+            <div style={{
+                position: 'fixed', top: 0, left: 0, width: '100%', height: '100%', zIndex: -3,
+                backgroundImage: 'radial-gradient(rgba(179, 136, 255, 0.03) 1px, transparent 1px)',
+                backgroundSize: '30px 30px', pointerEvents: 'none',
+            }} />
+
+            {/* Snow Sprinkles */}
+            <div className="snow-container">
+                {Array.from({ length: 40 }).map((_, i) => {
+                    const size = Math.random() * 4 + 2;
+                    const left = Math.random() * 100;
+                    const duration = Math.random() * 8 + 6;
+                    const delay = Math.random() * 10;
+                    const opacity = Math.random() * 0.5 + 0.3;
+                    return (
+                        <div
+                            key={i}
+                            className="snowflake"
+                            style={{
+                                left: `${left}%`,
+                                width: `${size}px`,
+                                height: `${size}px`,
+                                animationDuration: `${duration}s`,
+                                animationDelay: `${delay}s`,
+                                opacity,
+                            }}
+                        />
+                    );
+                })}
+            </div>
 
             {/* UI */}
             <div className="ui-container" style={{
@@ -322,6 +401,65 @@ function App() {
             >
                 ♪
             </button>
+
+            {/* Login Button - Separate Element */}
+            <button
+                className="admin-login-btn"
+                onClick={() => setIsAdminLoginOpen(true)}
+                style={{ zIndex: 99999 }}
+            >
+                LOGIN
+            </button>
+
+            {/* Login Modal */}
+            {isAdminLoginOpen && (
+                <div style={{
+                    position: 'fixed', top: 0, left: 0, width: '100%', height: '100%',
+                    background: 'rgba(0,0,0,0.8)', zIndex: 100000,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    backdropFilter: 'blur(5px)'
+                }} onClick={() => setIsAdminLoginOpen(false)}>
+                    <div onClick={e => e.stopPropagation()} style={{
+                        background: 'rgba(20, 10, 40, 0.9)',
+                        border: '1px solid var(--accent-purple)',
+                        padding: '40px', borderRadius: '16px',
+                        display: 'flex', flexDirection: 'column', gap: '20px',
+                        width: '300px',
+                        boxShadow: '0 0 40px rgba(169, 41, 255, 0.2)'
+                    }}>
+                        <h3 style={{
+                            fontFamily: 'Orbitron', color: '#fff', textAlign: 'center',
+                            letterSpacing: '2px', fontSize: '1.5rem'
+                        }}>SYSTEM ACCESS</h3>
+                        <form onSubmit={handleLogin} style={{ display: 'flex', flexDirection: 'column', gap: '15px' }}>
+                            <input
+                                type="password"
+                                placeholder="ENTER PASSCODE"
+                                value={password}
+                                onChange={e => setPassword(e.target.value)}
+                                autoFocus
+                                style={{
+                                    background: 'rgba(255,255,255,0.05)',
+                                    border: '1px solid rgba(255,255,255,0.1)',
+                                    color: '#fff', padding: '12px',
+                                    borderRadius: '8px', outline: 'none',
+                                    fontFamily: 'Space Mono', letterSpacing: '2px',
+                                    textAlign: 'center'
+                                }}
+                            />
+                            <button type="submit" style={{
+                                background: 'var(--accent-purple)',
+                                color: '#000', border: 'none',
+                                padding: '12px', borderRadius: '8px',
+                                fontFamily: 'Orbitron', fontWeight: 'bold',
+                                cursor: 'pointer', letterSpacing: '1px'
+                            }}>
+                                AUTHENTICATE
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
         </>
     );
 }

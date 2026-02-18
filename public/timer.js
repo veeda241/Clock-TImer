@@ -272,4 +272,42 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
+
+    // --- Login Logic ---
+    const loginBtn = document.getElementById('admin-login-btn');
+    const loginOverlay = document.getElementById('login-modal-overlay');
+    const loginSubmit = document.getElementById('login-submit-btn');
+    const passwordInput = document.getElementById('admin-password');
+
+    if (loginBtn && loginOverlay) {
+        loginBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            loginOverlay.style.display = 'flex';
+            passwordInput.focus();
+        });
+
+        loginOverlay.addEventListener('click', (e) => {
+            if (e.target === loginOverlay) {
+                loginOverlay.style.display = 'none';
+            }
+        });
+
+        const attemptLogin = () => {
+            const pass = passwordInput.value;
+            if (pass === 'admin') {
+                window.location.href = '/mobile.html';
+            } else {
+                alert('ACCESS DENIED');
+                passwordInput.value = '';
+            }
+        };
+
+        if (loginSubmit) loginSubmit.addEventListener('click', attemptLogin);
+
+        if (passwordInput) {
+            passwordInput.addEventListener('keypress', (e) => {
+                if (e.key === 'Enter') attemptLogin();
+            });
+        }
+    }
 });
