@@ -636,7 +636,53 @@
                 font-size: 1.2rem;
             }
         }
+
+        /* QR Panel Styles */
+        .qr-panel {
+            background: #111118;
+            border: 1px solid #1e1e2e;
+            border-radius: 14px;
+            padding: 20px;
+            margin: 20px auto;
+            max-width: 280px;
+            text-align: center;
+            font-family: 'Orbitron', monospace;
+        }
+
+        .qr-panel h3 {
+            font-size: 11px;
+            letter-spacing: 3px;
+            color: #00f5c4;
+            margin-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        .qr-panel p {
+            font-size: 10px;
+            color: #4a4a6a;
+            margin-bottom: 14px;
+            letter-spacing: 1px;
+        }
+
+        #qrcode {
+            display: inline-block;
+            padding: 10px;
+            background: white;
+            border-radius: 8px;
+        }
+
+        .qr-url {
+            margin-top: 10px;
+            font-size: 10px;
+            color: #4a4a6a;
+            word-break: break-all;
+        }
+
+        .qr-url span {
+            color: #00f5c4;
+        }
     </style>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 </head>
 
 <body>
@@ -655,6 +701,11 @@
             </div>
             <div class="panel-title">CHRONO CONTROL</div>
             <div class="panel-subtitle">TIMER MANAGEMENT CONSOLE</div>
+            <div style="margin-top: 10px; display:flex; align-items:center; justify-content:center; gap:8px;">
+                <span class="status-dot" id="connection-dot" style="width: 6px; height: 6px; background: #666;"></span>
+                <span style="font-size:10px; letter-spacing:2px; color:var(--text-secondary); cursor:pointer;"
+                    id="connLabel" onclick="resetServer()">CONNECTING...</span>
+            </div>
         </div>
 
         <!-- Timer Display -->
@@ -737,13 +788,55 @@
             </div>
         </div>
 
+        <!-- Phone Control QR -->
+        <div class="qr-panel">
+            <h3>📱 Phone Control</h3>
+            <p>Scan to open mobile timer on any phone</p>
+            <div id="qrcode"></div>
+            <div class="qr-url">
+                Connect to: <span id="qrUrlDisplay"></span>
+            </div>
+        </div>
+
     </div>
 
     <audio id="background-music" src="HackAIThon Anthem.mp3" loop></audio>
     <audio id="final-15-music" src="final_15_mins_music.m4a"></audio>
     <button id="mute-btn">♪</button>
 
+    <script src="/socket.io/socket.io.js"></script>
     <script src="control.js"></script>
+
+    <!-- QR Generation Script -->
+    <script>
+        (async function generateQR() {
+            let host = window.location.hostname;
+            try {
+                const res = await fetch('/system/ip');
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.ip && data.ip !== 'localhost') host = data.ip;
+                }
+            } catch (e) {
+                console.log('Using fallback host');
+            }
+
+            const port = window.location.port ? ':' + window.location.port : '';
+            const mobileUrl = `http://${host}${port}/mobile.html`;
+
+            document.getElementById('qrUrlDisplay').textContent = mobileUrl;
+            document.getElementById('qrcode').innerHTML = ''; // Clear previous
+
+            new QRCode(document.getElementById('qrcode'), {
+                text: mobileUrl,
+                width: 180,
+                height: 180,
+                colorDark: '#000000',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.H
+            });
+        })();
+    </script>
 </body>
 
 </html>

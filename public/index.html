@@ -133,8 +133,127 @@
         </svg>
     </button>
 
+    <!-- End Video Overlay -->
+    <!-- End Video Overlay -->
+    <div id="video-overlay" style="display: none;">
+        <video id="end-video" src="loading-screen.mp4" playsinline></video>
+    </div>
+    <style>
+        #video-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 99999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #end-video {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            /* or cover if you want to fill */
+        }
+    </style>
+
     <script src="grainient.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
     <script src="timer.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <!-- Sprinkles / Particles Effect -->
+    <script>
+        // Floating Sprinkles Background
+        (function () {
+            const canvas = document.createElement('canvas');
+            canvas.style.position = 'fixed';
+            canvas.style.top = '0';
+            canvas.style.left = '0';
+            canvas.style.width = '100%';
+            canvas.style.height = '100%';
+            canvas.style.pointerEvents = 'none'; // Click-through
+            canvas.style.zIndex = '1'; // Above grainient, below UI
+            document.body.insertBefore(canvas, document.querySelector('.ui-container'));
+
+            const ctx = canvas.getContext('2d');
+            let width, height;
+            const particles = [];
+
+            function resize() {
+                width = canvas.width = window.innerWidth;
+                height = canvas.height = window.innerHeight;
+            }
+            window.addEventListener('resize', resize);
+            resize();
+
+            class Particle {
+                constructor() {
+                    this.reset();
+                    this.y = Math.random() * height; // Start anywhere
+                }
+                reset() {
+                    this.x = Math.random() * width;
+                    this.y = height + 10;
+                    this.speed = Math.random() * 0.5 + 0.2;
+                    this.size = Math.random() * 2 + 0.5;
+                    this.opacity = Math.random() * 0.5 + 0.1;
+                    this.drift = (Math.random() - 0.5) * 0.5;
+                }
+                update() {
+                    this.y -= this.speed;
+                    this.x += this.drift;
+                    if (this.y < -10) this.reset();
+                }
+                draw() {
+                    ctx.fillStyle = `rgba(160, 230, 255, ${this.opacity})`;
+                    ctx.beginPath();
+                    ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            for (let i = 0; i < 80; i++) particles.push(new Particle());
+
+            function animate() {
+                ctx.clearRect(0, 0, width, height);
+                particles.forEach(p => {
+                    p.update();
+                    p.draw();
+                });
+                requestAnimationFrame(animate);
+            }
+            animate();
+        })();
+
+        // Global function for Timer to call
+        window.triggerVictory = function () {
+            const duration = 5 * 1000;
+            const animationEnd = Date.now() + duration;
+            const defaults = { startVelocity: 30, spread: 360, ticks: 60, zIndex: 999 };
+
+            function randomInRange(min, max) {
+                return Math.random() * (max - min) + min;
+            }
+
+            const interval = setInterval(function () {
+                const timeLeft = animationEnd - Date.now();
+
+                if (timeLeft <= 0) {
+                    return clearInterval(interval);
+                }
+
+                const particleCount = 50 * (timeLeft / duration);
+
+                // since particles fall down, start a bit higher than random
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.1, 0.3), y: Math.random() - 0.2 } }));
+                confetti(Object.assign({}, defaults, { particleCount, origin: { x: randomInRange(0.7, 0.9), y: Math.random() - 0.2 } }));
+            }, 250);
+        };
+    </script>
 </body>
 
 </html>

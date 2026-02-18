@@ -1,4 +1,24 @@
 const timerDisplay = document.getElementById('timer-display');
+let SERVER_URL = localStorage.getItem('server_url');
+
+// Clean bad URLs immediately
+if (SERVER_URL) {
+    try {
+        const urlObj = new URL(SERVER_URL);
+        if (urlObj.pathname.length > 1) {
+            SERVER_URL = urlObj.origin;
+            localStorage.setItem('server_url', SERVER_URL);
+        }
+    } catch (e) { }
+}
+const socket = SERVER_URL ? io(SERVER_URL, {
+    extraHeaders: {
+        "ngrok-skip-browser-warning": "true"
+    }
+}) : io();
+
+// Ensure fetch calls also use the SERVER_URL
+const API_BASE = SERVER_URL ? SERVER_URL : '';
 const timeInput = document.getElementById('timeInput');
 const startBtn = document.getElementById('startBtn');
 const pauseBtn = document.getElementById('pauseBtn');
@@ -7,7 +27,7 @@ const resetBtn = document.getElementById('resetBtn');
 // --- API Communication ---
 async function postCommand(command, body = {}) {
     try {
-        const response = await fetch(`/timer/${command}`, {
+        const response = await fetch(`${API_BASE}/timer/${command}`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(body),
@@ -24,10 +44,14 @@ async function postCommand(command, body = {}) {
 
 // --- Event Listeners ---
 startBtn.addEventListener('click', () => {
-    const duration = timeInput.value;
+    let duration = timeInput.value;
     if (!duration && !timerDisplay.textContent.includes('Paused')) {
         alert('Please set a duration in HH:MM:SS format.');
         return;
+    }
+    // Sanitize input
+    if (duration) {
+        duration = duration.replace(/[ .]/g, ':');
     }
     postCommand('start', { duration });
 
@@ -51,10 +75,10 @@ resetBtn.addEventListener('click', () => {
 });
 
 // --- UI Update ---
-async function updateStatus() {
+function updateStatus(state) {
+    if (!state) return;
     try {
-        const response = await fetch('/timer/state');
-        const state = await response.json();
+
 
         const timerDisplay = document.getElementById('timer-display');
         const timesUpDisplay = document.getElementById('times-up-display');
@@ -115,8 +139,21 @@ async function updateStatus() {
     }
 }
 
-setInterval(updateStatus, 1000);
-updateStatus();
+
+
+socket.on('timer-update', (state) => {
+    updateStatus(state);
+});
+
+socket.on('timer-tick', (state) => {
+    updateStatus(state);
+});
+
+// Initial fetch
+fetch(`${API_BASE}/timer/state`)
+    .then(res => res.json())
+    .then(state => updateStatus(state))
+    .catch(console.error);
 
 // --- Audio Controls ---
 document.addEventListener('DOMContentLoaded', () => {
@@ -174,7 +211,8 @@ presetBtns.forEach(btn => {
     btn.addEventListener('click', () => {
         const duration = btn.dataset.duration;
         timeInput.value = duration;
-        postCommand('start', { duration });
+        // Changed to use 'set' command
+        postCommand('set', { duration });
 
         const music = document.getElementById('background-music');
         if (music && music.paused) {
@@ -190,7 +228,7 @@ const add1hrBtn = document.getElementById('add1hrBtn');
 
 if (add15Btn) {
     add15Btn.addEventListener('click', () => {
-        fetch('/timer/add', {
+        fetch(`${API_BASE}/timer/add`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ms: 15 * 60 * 1000 })
@@ -200,10 +238,50 @@ if (add15Btn) {
 
 if (add1hrBtn) {
     add1hrBtn.addEventListener('click', () => {
-        fetch('/timer/add', {
+        fetch(`${API_BASE}/timer/add`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ ms: 60 * 60 * 1000 })
         }).catch(err => console.error('Failed to add time:', err));
     });
 }
+
+// --- Connection Handling ---
+socket.on('connect', () => {
+    const dot = document.getElementById('connection-dot');
+    const label = document.getElementById('connLabel');
+    if (dot) dot.style.background = '#00ff88';
+    if (label) label.textContent = 'CONNECTED' + (SERVER_URL ? ' (REMOTE)' : ' (LOCAL)');
+});
+
+socket.on('disconnect', () => {
+    const dot = document.getElementById('connection-dot');
+    const label = document.getElementById('connLabel');
+    if (dot) dot.style.background = '#ff3c6e';
+    if (label) label.textContent = 'DISCONNECTED';
+});
+
+window.resetServer = function () {
+    const current = localStorage.getItem('server_url');
+    const newUrl = prompt("Enter Server URL (leave empty for localhost):", current || "");
+    if (newUrl !== null) {
+        if (newUrl.trim() === "") {
+            localStorage.removeItem('server_url');
+        } else {
+            let cleanedUrl = newUrl.trim();
+            // Auto-add protocol if missing
+            if (!cleanedUrl.match(/^https?:\/\//)) {
+                const isLocal = cleanedUrl.includes('localhost') || cleanedUrl.includes('127.0.0.1') || cleanedUrl.startsWith('192.168.') || cleanedUrl.startsWith('10.');
+                cleanedUrl = (isLocal ? 'http://' : 'https://') + cleanedUrl;
+            }
+            try {
+                const urlObj = new URL(cleanedUrl);
+                localStorage.setItem('server_url', urlObj.origin);
+            } catch (e) {
+                // Fallback
+                localStorage.setItem('server_url', cleanedUrl);
+            }
+        }
+        window.location.reload();
+    }
+};

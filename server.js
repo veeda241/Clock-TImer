@@ -1,8 +1,21 @@
 const express = require('express');
 const path = require('path'); // Need path for serving the admin app
 const multer = require('multer');
+const cors = require('cors');
 const app = express();
-const port = 3000;
+const http = require('http');
+const { Server } = require('socket.io');
+
+const server = http.createServer(app);
+const io = new Server(server, {
+    cors: {
+        origin: "*", // Allow all origins for simplicity in this setup
+        methods: ["GET", "POST"]
+    }
+});
+
+app.use(cors());
+const port = process.env.PORT || 3000;
 
 // --- Multer Setup ---
 const storage = multer.diskStorage({
@@ -32,7 +45,7 @@ app.get('/logo.jpeg', (req, res) => {
 app.use(express.static('client/dist'));
 app.use(express.static('public'));
 app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'client/dist/index.html'));
+    res.sendFile(path.join(__dirname, 'public/index.html'));
 });
 app.use('/uploads', express.static(path.join(__dirname, 'public/uploads')));
 
@@ -43,6 +56,25 @@ app.use('/admin', express.static(path.join(__dirname, 'admin/dist')));
 // issues with standard wildcard strings.
 app.get(/^\/admin(\/.*)?$/, (req, res) => {
     res.sendFile(path.join(__dirname, 'admin/dist/index.html'));
+});
+
+// --- Get Local IP ---
+app.get('/system/ip', (req, res) => {
+    const os = require('os');
+    const nets = os.networkInterfaces();
+    let ip = 'localhost';
+
+    for (const name of Object.keys(nets)) {
+        for (const net of nets[name]) {
+            // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+            if (net.family === 'IPv4' && !net.internal) {
+                ip = net.address;
+                break;
+            }
+        }
+        if (ip !== 'localhost') break;
+    }
+    res.json({ ip });
 });
 
 let timerState = {
@@ -75,8 +107,15 @@ function updateTimer() {
             clearInterval(countdown);
             timerState.running = false;
             timerState.timeLeft = 0;
+            io.emit('timer-update', timerState); // Final update
         }
     }
+    // Emit a tick event every second to all clients for synchronization
+    // This allows clients to potentially drift less if they just listen to this
+    // although they should still calculate locally for smooth animation.
+    // Ideally, we send the *state* (endTime, running, etc) and let them calculate,
+    // but sending the calculated timeLeft is also fine for simple displays.
+    io.emit('timer-tick', timerState);
 }
 
 // NEW endpoint for the admin panel
@@ -118,25 +157,70 @@ app.post('/timer/config', upload.fields([{ name: 'background', maxCount: 1 }, { 
 
     countdown = setInterval(updateTimer, 1000);
     console.log('Timer configured and started:', timerState);
+    io.emit('timer-update', timerState);
     res.json(timerState);
 });
 
 
-app.post('/timer/start', (req, res) => {
-    const { duration } = req.body; // duration in HH:MM:SS
+app.post('/timer/set', (req, res) => {
+    const { duration } = req.body;
+    if (!duration) {
+        return res.status(400).json({ error: 'Duration is required.' });
+    }
+    const parts = duration.split(':').map(Number).reverse();
+    if (parts.some(isNaN) || parts.length === 0) {
+        return res.status(400).json({ error: 'Invalid time format.' });
+    }
+    let totalMilliseconds = 0;
+    totalMilliseconds += (parts[0] || 0) * 1000;
+    totalMilliseconds += (parts[1] || 0) * 60 * 1000;
+    totalMilliseconds += (parts[2] || 0) * 3600 * 1000;
+    totalMilliseconds += (parts[3] || 0) * 24 * 3600 * 1000;
+    totalMilliseconds += (parts[4] || 0) * 30 * 24 * 3600 * 1000;
 
-    if (timerState.paused && timerState.timeLeft > 0) {
-        timerState.paused = false;
+    if (totalMilliseconds <= 0) {
+        return res.status(400).json({ error: 'Duration must be positive.' });
+    }
+
+    timerState.initialDuration = totalMilliseconds;
+    timerState.timeLeft = totalMilliseconds;
+    timerState.running = false;
+    timerState.paused = false;
+    timerState.startTime = null;
+    timerState.endTime = null;
+    timerState.isFinalMinutes = false;
+
+    clearInterval(countdown);
+    io.emit('timer-update', timerState);
+    res.json(timerState);
+});
+
+app.post('/timer/start', (req, res) => {
+    const { duration } = req.body;
+
+    // Case 1: Resume from Pause or Start from Set
+    if ((timerState.paused || !timerState.running) && timerState.timeLeft > 0 && !duration) {
+        const now = Date.now();
+        // Recalculate endTime based on remaining timeLeft
+        timerState.startTime = new Date(now).toISOString();
+        timerState.endTime = new Date(now + timerState.timeLeft).toISOString();
         timerState.running = true;
+        timerState.paused = false;
     } else {
+        // Case 2: New Start with Duration
         if (!duration) {
-            return res.status(400).json({ error: 'Duration is required for simple start.' });
+            return res.status(400).json({ error: 'Duration is required.' });
         }
-        const [hours, minutes, seconds] = duration.split(':').map(Number);
-        if (isNaN(hours) || isNaN(minutes) || isNaN(seconds)) {
+        const parts = duration.split(':').map(Number).reverse();
+        if (parts.some(isNaN) || parts.length === 0) {
             return res.status(400).json({ error: 'Invalid time format.' });
         }
-        const totalMilliseconds = (hours * 3600 + minutes * 60 + seconds) * 1000;
+        let totalMilliseconds = 0;
+        totalMilliseconds += (parts[0] || 0) * 1000;
+        totalMilliseconds += (parts[1] || 0) * 60 * 1000;
+        totalMilliseconds += (parts[2] || 0) * 3600 * 1000;
+        totalMilliseconds += (parts[3] || 0) * 24 * 3600 * 1000;
+        totalMilliseconds += (parts[4] || 0) * 30 * 24 * 3600 * 1000;
         if (totalMilliseconds <= 0) {
             return res.status(400).json({ error: 'Duration must be positive.' });
         }
@@ -147,17 +231,19 @@ app.post('/timer/start', (req, res) => {
         timerState.timeLeft = totalMilliseconds;
         timerState.running = true;
         timerState.paused = false;
-        timerState.isFinalMinutes = false; // Reset flag
+        timerState.isFinalMinutes = false;
     }
 
     clearInterval(countdown);
     countdown = setInterval(updateTimer, 1000);
+    io.emit('timer-update', timerState);
     res.json(timerState);
 });
 
 app.post('/timer/pause', (req, res) => {
     if (timerState.running && !timerState.paused) {
         timerState.paused = true;
+        io.emit('timer-update', timerState);
     }
     res.json(timerState);
 });
@@ -173,6 +259,7 @@ app.post('/timer/reset', (req, res) => {
     timerState.initialDuration = 0;
     timerState.timeLeft = null;
 
+    io.emit('timer-update', timerState);
     res.json(timerState);
 });
 
@@ -204,6 +291,7 @@ app.post('/timer/add', (req, res) => {
     }
 
     res.json(timerState);
+    io.emit('timer-update', timerState);
 });
 
 app.get('/timer/state', (req, res) => {
@@ -214,9 +302,21 @@ app.get('/timer/state', (req, res) => {
     res.json(timerState);
 });
 
-app.listen(port, () => {
-    console.log(`Server listening at http://localhost:${port}`);
-    console.log(`Timer display: http://localhost:${port}`);
-    console.log(`Control panel: http://localhost:${port}/control.html`);
-    console.log(`New Admin panel: http://localhost:${port}/admin`);
+io.on('connection', (socket) => {
+    console.log('Client connected:', socket.id);
+    // Send current state immediately upon connection
+    socket.emit('timer-update', timerState);
+
+    socket.on('disconnect', () => {
+        console.log('Client disconnected:', socket.id);
+    });
+});
+
+server.listen(port, () => {
+    console.log(`\n=== IMPACT AI-THON TIMER ===`);
+    console.log(`Server:  http://localhost:${port}`);
+    console.log(`Display: http://localhost:${port}/ (Standard)`);
+    console.log(`Control: http://localhost:${port}/control.html (with QR)`);
+    console.log(`Mobile:  http://localhost:${port}/mobile.html`);
+    console.log(`=============================\n`);
 });

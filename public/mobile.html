@@ -1,0 +1,904 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0a0a0f" />
+    <link rel="manifest" href="/manifest.json" />
+    <title>HackTimer · Mobile</title>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Rajdhani:wght@300;500&display=swap"
+        rel="stylesheet" />
+    <!-- Use standard CSS from before, plus Setup Modal styles -->
+    <script src="/socket.io/socket.io.js"></script>
+    <style>
+        :root {
+            --bg: #0a0a0f;
+            --surface: #111118;
+            --border: #1e1e2e;
+            --accent: #00f5c4;
+            --accent2: #ff3c6e;
+            --warn: #ffb800;
+            --text: #e8e8f0;
+            --dim: #4a4a6a;
+            --glow: 0 0 20px rgba(0, 245, 196, 0.4);
+            --glow-red: 0 0 20px rgba(255, 60, 110, 0.5);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Rajdhani', sans-serif;
+            min-height: 100dvh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Animated background grid */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            background-image:
+                linear-gradient(rgba(0, 245, 196, 0.03) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(0, 245, 196, 0.03) 1px, transparent 1px);
+            background-size: 40px 40px;
+            animation: gridScroll 20s linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        @keyframes gridScroll {
+            0% {
+                background-position: 0 0;
+            }
+
+            100% {
+                background-position: 40px 40px;
+            }
+        }
+
+        /* ── HEADER ── */
+        .header {
+            position: relative;
+            z-index: 10;
+            padding: 16px 20px 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--border);
+            background: rgba(10, 10, 15, 0.8);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--dim);
+            transition: all 0.3s;
+            box-shadow: none;
+        }
+
+        .status-dot.live {
+            background: var(--accent);
+            box-shadow: 0 0 10px var(--accent);
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.paused {
+            background: var(--warn);
+            box-shadow: 0 0 10px var(--warn);
+        }
+
+        @keyframes pulse {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.4;
+            }
+        }
+
+        /* ── TIMER DISPLAY ── */
+        .timer-section {
+            position: relative;
+            z-index: 10;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px 16px;
+        }
+
+        .timer-label {
+            font-size: 10px;
+            letter-spacing: 4px;
+            color: var(--dim);
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .timer-display {
+            font-size: clamp(28px, 10vw, 52px);
+        }
+
+        .timer-segments {
+            display: flex;
+            gap: 8px;
+            align-items: flex-start;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .seg {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .seg-value {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: clamp(32px, 11vw, 60px);
+            color: var(--accent);
+            text-shadow: var(--glow);
+            line-height: 1;
+            min-width: 2ch;
+            text-align: center;
+            transition: color 0.5s, text-shadow 0.5s;
+        }
+
+        .seg-label {
+            font-size: 9px;
+            letter-spacing: 2px;
+            color: var(--dim);
+            text-transform: uppercase;
+        }
+
+        .seg-colon {
+            font-family: 'Orbitron', monospace;
+            font-weight: 900;
+            font-size: clamp(32px, 11vw, 60px);
+            color: var(--border);
+            line-height: 1;
+            margin-top: 0;
+            animation: colonBlink 1s step-end infinite;
+        }
+
+        @keyframes colonBlink {
+
+            0%,
+            100% {
+                opacity: 1;
+            }
+
+            50% {
+                opacity: 0.2;
+            }
+        }
+
+        .state-badge {
+            margin-top: 20px;
+            padding: 5px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            font-weight: 500;
+            border: 1px solid var(--dim);
+            color: var(--dim);
+            transition: all 0.3s;
+        }
+
+        .state-badge.running {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(0, 245, 196, 0.08);
+        }
+
+        .state-badge.paused {
+            border-color: var(--warn);
+            color: var(--warn);
+            background: rgba(255, 184, 0, 0.08);
+        }
+
+        /* ── SET TIME PANEL ── */
+        .set-time-panel {
+            position: relative;
+            z-index: 10;
+            padding: 0 16px 12px;
+        }
+
+        .set-time-row {
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+
+        .time-input {
+            flex: 1;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-family: 'Orbitron', monospace;
+            font-size: 13px;
+            padding: 10px 10px;
+            text-align: center;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            -webkit-appearance: none;
+            appearance: none;
+        }
+
+        .time-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px rgba(0, 245, 196, 0.15);
+        }
+
+        .time-input::placeholder {
+            color: var(--dim);
+            font-size: 10px;
+        }
+
+        .set-btn {
+            background: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1px;
+            padding: 10px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .set-btn:active {
+            transform: scale(0.96);
+            opacity: 0.8;
+        }
+
+        .input-hint {
+            text-align: center;
+            font-size: 10px;
+            color: var(--dim);
+            margin-top: 6px;
+            letter-spacing: 1px;
+        }
+
+        /* ── CONTROL BUTTONS ── */
+        .controls {
+            position: relative;
+            z-index: 10;
+            padding: 12px 16px 20px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 10px;
+        }
+
+        .ctrl-btn {
+            border: none;
+            border-radius: 12px;
+            padding: 16px 8px;
+            font-family: 'Orbitron', monospace;
+            font-size: 11px;
+            font-weight: 700;
+            letter-spacing: 1.5px;
+            text-transform: uppercase;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .ctrl-btn::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: white;
+            opacity: 0;
+            transition: opacity 0.1s;
+        }
+
+        .ctrl-btn:active::after {
+            opacity: 0.1;
+        }
+
+        .ctrl-btn:active {
+            transform: scale(0.96);
+        }
+
+        .ctrl-btn .icon {
+            font-size: 22px;
+        }
+
+        .btn-start {
+            background: linear-gradient(135deg, #00f5c4, #00c49a);
+            color: #000;
+            box-shadow: 0 4px 20px rgba(0, 245, 196, 0.3);
+        }
+
+        .btn-pause {
+            background: linear-gradient(135deg, #ffb800, #ff8c00);
+            color: #000;
+            box-shadow: 0 4px 20px rgba(255, 184, 0, 0.3);
+        }
+
+        .btn-reset {
+            background: linear-gradient(135deg, #ff3c6e, #c0002e);
+            color: #fff;
+            box-shadow: 0 4px 20px rgba(255, 60, 110, 0.3);
+        }
+
+        /* ── TOAST ── */
+        .toast {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--surface);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-size: 12px;
+            letter-spacing: 2px;
+            font-family: 'Orbitron', monospace;
+            opacity: 0;
+            transition: all 0.3s;
+            z-index: 100;
+            white-space: nowrap;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+
+        .toast.error {
+            border-color: var(--accent2);
+            color: var(--accent2);
+        }
+
+        .divider {
+            position: relative;
+            z-index: 10;
+            height: 1px;
+            background: var(--border);
+            margin: 0 16px;
+        }
+
+        /* ── SETUP SCREEN ── */
+        #setup-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: var(--bg);
+            z-index: 9999;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 30px;
+        }
+
+        .setup-card {
+            width: 100%;
+            max-width: 340px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .setup-title {
+            font-family: 'Orbitron', monospace;
+            color: var(--accent);
+            font-size: 14px;
+            letter-spacing: 2px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+        }
+
+        .setup-text {
+            color: var(--dim);
+            font-size: 12px;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- SETUP MODAL -->
+    <div id="setup-modal">
+        <div class="setup-card">
+            <div class="setup-title">Remote Configuration</div>
+            <div class="setup-text">
+                Enter the <strong>ngrok URL</strong> displayed on your PC server console.<br>
+                (e.g., https://abc-123.ngrok-free.app)
+            </div>
+            <input id="server-url-input" class="time-input" style="width:100%; margin-bottom:16px; text-align:left;"
+                placeholder="https://..." />
+            <button class="set-btn" onclick="saveServer()" style="width:100%">CONNECT</button>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <div class="header">
+        <div class="logo">Impact·AI·Thon</div>
+        <div style="display:flex;align-items:center;gap:8px;">
+            <span style="font-size:10px;letter-spacing:2px;color:var(--dim); cursor:pointer;" id="connLabel"
+                onclick="resetServer()">SYNCING</span>
+            <div class="status-dot" id="statusDot"></div>
+        </div>
+    </div>
+
+    <!-- TIMER DISPLAY -->
+    <div class="timer-section">
+        <div class="timer-label">Time Remaining</div>
+
+        <div class="timer-segments" id="timerSegments">
+            <div class="seg" id="seg-months" style="display:none">
+                <div class="seg-value" id="val-months">00</div>
+                <div class="seg-label">Months</div>
+            </div>
+            <div class="seg-colon" id="col-months" style="display:none">:</div>
+
+            <div class="seg" id="seg-days" style="display:none">
+                <div class="seg-value" id="val-days">00</div>
+                <div class="seg-label">Days</div>
+            </div>
+            <div class="seg-colon" id="col-days" style="display:none">:</div>
+
+            <div class="seg">
+                <div class="seg-value" id="val-hours">00</div>
+                <div class="seg-label">Hours</div>
+            </div>
+            <div class="seg-colon">:</div>
+
+            <div class="seg">
+                <div class="seg-value" id="val-minutes">00</div>
+                <div class="seg-label">Min</div>
+            </div>
+            <div class="seg-colon">:</div>
+
+            <div class="seg">
+                <div class="seg-value" id="val-seconds">00</div>
+                <div class="seg-label">Sec</div>
+            </div>
+        </div>
+
+        <div class="state-badge" id="stateBadge">IDLE</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- SET CUSTOM TIME -->
+    <div class="set-time-panel" style="padding-top:14px;">
+        <div class="set-time-row">
+            <input class="time-input" id="durationInput" type="text" placeholder="HH:MM:SS" maxlength="12"
+                inputmode="decimal" />
+            <button class="set-btn" onclick="setCustomTime()">SET</button>
+        </div>
+        <div class="input-hint">Type digits. Use dot/space for colon.</div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- CONTROLS -->
+    <div class="controls">
+        <button class="ctrl-btn btn-start" onclick="sendCommand('start')">
+            <span class="icon">▶</span>
+            Start
+        </button>
+        <button class="ctrl-btn btn-pause" onclick="sendCommand('pause')">
+            <span class="icon">⏸</span>
+            Pause
+        </button>
+        <button class="ctrl-btn btn-reset" onclick="sendCommand('reset')">
+            <span class="icon">↺</span>
+            Reset
+        </button>
+    </div>
+
+    <!-- TOAST -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        let SERVER = localStorage.getItem('server_url');
+
+        // DATA MIGRATION: Fix bad URLs in storage immediately
+        if (SERVER) {
+            try {
+                // If it contains a filename or path, strip it back to origin
+                // e.g. http://10.0.0.1:3000/mobile.html -> http://10.0.0.1:3000
+                const urlObj = new URL(SERVER);
+                if (urlObj.pathname.length > 1) {
+                    SERVER = urlObj.origin;
+                    localStorage.setItem('server_url', SERVER);
+                }
+            } catch (e) {
+                // allow validation to handle it
+            }
+        }
+
+        let socket;
+
+        // Initialize
+        if (!SERVER || !(SERVER.includes('.') || SERVER.includes('localhost') || SERVER.includes('127.0.0.1'))) {
+            // Invalid or missing, show setup
+            localStorage.removeItem('server_url'); // Clear bad data
+            SERVER = null;
+            document.getElementById('setup-modal').style.display = 'flex';
+        } else {
+            startApp();
+        }
+
+        function saveServer() {
+            let input = document.getElementById('server-url-input').value.trim();
+            if (!input) return;
+
+            // Basic validation
+            if (!input.includes('.') && !input.includes('localhost')) {
+                alert("Invalid URL. Please enter the full address.");
+                return;
+            }
+
+            // Auto-add protocol if missing
+            if (!input.match(/^https?:\/\//)) {
+                // If it looks like a local IP/localhost, default to http, else https
+                const isLocal = input.includes('localhost') || input.includes('127.0.0.1') || input.startsWith('192.168.') || input.startsWith('10.');
+                input = (isLocal ? 'http://' : 'https://') + input;
+            }
+
+            try {
+                const urlObj = new URL(input);
+                // valid URL. strictly use origin to strip any path like /mobile.html
+                SERVER = urlObj.origin;
+            } catch (e) {
+                // fallback if URL parsing fails (unlikely if protocol added)
+                SERVER = input;
+                if (SERVER.endsWith('/')) SERVER = SERVER.slice(0, -1);
+            }
+
+            localStorage.setItem('server_url', SERVER);
+            document.getElementById('setup-modal').style.display = 'none';
+            startApp();
+        }
+
+        function resetServer() {
+            if (confirm('Disconnect from current server?')) {
+                localStorage.removeItem('server_url');
+                window.location.reload();
+            }
+        }
+
+        function startApp() {
+            if (socket) socket.disconnect();
+
+            // Connect to the configured server or default
+            // If SERVER is set (e.g. ngrok), use it. otherwise use current origin.
+            if (SERVER) {
+                try {
+                    socket = io(SERVER, {
+                        extraHeaders: {
+                            "ngrok-skip-browser-warning": "true"
+                        }
+                    });
+                } catch (e) {
+                    console.error("Socket init error:", e);
+                    // Fallback to polling strictly? Or just error out?
+                    // Let's assume io() works if script loaded.
+                }
+            } else {
+                socket = io();
+            }
+
+            if (!socket) return;
+
+            socket.on('connect', () => {
+                setConnected(true);
+            });
+
+            socket.on('disconnect', () => {
+                setConnected(false);
+            });
+
+            socket.on('timer-update', (data) => {
+                handleUpdate(data);
+            });
+
+            socket.on('timer-tick', (data) => {
+                handleUpdate(data);
+            });
+
+            // Initial fetch to ensure we have data immediately
+            fetchState();
+        }
+
+        function handleUpdate(data) {
+            serverEndTime = data.endTime;
+            serverRunning = data.running;
+            serverRemaining = data.timeLeft;
+
+            // Directly update display
+            updateDisplay({
+                isRunning: serverRunning,
+                endTime: serverEndTime,
+                remainingTime: serverRemaining
+            });
+        }
+
+
+        // ── FETCH TIMER STATE ──
+        async function fetchState() {
+            if (!SERVER) return;
+            try {
+                const res = await fetch(`${SERVER}/timer/state`, {
+                    headers: {
+                        'ngrok-skip-browser-warning': 'true',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    }
+                });
+                if (!res.ok) throw new Error('Server error');
+                const data = await res.json();
+                serverEndTime = data.endTime;
+                serverRunning = data.running;
+                serverRemaining = data.timeLeft;
+
+                updateDisplay({
+                    isRunning: serverRunning,
+                    endTime: serverEndTime,
+                    remainingTime: serverRemaining
+                });
+                setConnected(true);
+            } catch (e) {
+                setConnected(false);
+            }
+        }
+
+        function setConnected(ok) {
+            const dot = document.getElementById('statusDot');
+            const label = document.getElementById('connLabel');
+            if (ok) {
+                dot.className = 'status-dot live';
+                label.textContent = 'LIVE';
+            } else {
+                dot.className = 'status-dot';
+                label.textContent = 'OFFLINE';
+            }
+        }
+
+        // ── UPDATE DISPLAY ──
+        function updateDisplay(state) {
+            const now = Date.now();
+            let remaining = 0;
+
+            if (state.isRunning && state.endTime) {
+                // Parse ISO string
+                const end = new Date(state.endTime).getTime();
+                remaining = Math.max(0, end - now);
+            } else if (!state.isRunning && state.remainingTime) {
+                remaining = Math.max(0, state.remainingTime);
+            }
+
+            const totalSec = Math.floor(remaining / 1000);
+            const months = Math.floor(totalSec / (30 * 24 * 3600));
+            const days = Math.floor((totalSec % (30 * 24 * 3600)) / (24 * 3600));
+            const hours = Math.floor((totalSec % (24 * 3600)) / 3600);
+            const minutes = Math.floor((totalSec % 3600) / 60);
+            const seconds = totalSec % 60;
+
+            const pad = n => String(n).padStart(2, '0');
+
+            // Show/hide month and day segments
+            const showMonths = months > 0;
+            const segMonths = document.getElementById('seg-months');
+            if (segMonths) {
+                segMonths.style.display = showMonths ? 'flex' : 'none';
+                document.getElementById('col-months').style.display = showMonths ? 'flex' : 'none';
+                document.getElementById('seg-days').style.display = showMonths ? 'flex' : 'none';
+                document.getElementById('col-days').style.display = showMonths ? 'flex' : 'none';
+
+                document.getElementById('val-months').textContent = pad(months);
+                document.getElementById('val-days').textContent = pad(days);
+            }
+
+            document.getElementById('val-hours').textContent = pad(hours);
+            document.getElementById('val-minutes').textContent = pad(minutes);
+            document.getElementById('val-seconds').textContent = pad(seconds);
+
+            // Color coding
+            const allVals = document.querySelectorAll('.seg-value');
+            allVals.forEach(el => {
+                el.style.color = '';
+                el.style.textShadow = '';
+                el.style.animation = '';
+            });
+
+            if (totalSec <= 60 && state.isRunning) {
+                allVals.forEach(el => {
+                    el.style.color = 'var(--accent2)';
+                    el.style.textShadow = 'var(--glow-red)';
+                    el.style.animation = 'criticalFlash 1s infinite';
+                });
+            } else if (totalSec <= 300 && state.isRunning) {
+                allVals.forEach(el => {
+                    el.style.color = 'var(--warn)';
+                    el.style.textShadow = '0 0 20px rgba(255,184,0,0.5)';
+                });
+            }
+
+            // State badge
+            const badge = document.getElementById('stateBadge');
+            if (state.isRunning) {
+                badge.textContent = 'RUNNING';
+                badge.className = 'state-badge running';
+            } else if (totalSec > 0) {
+                badge.textContent = 'PAUSED';
+                badge.className = 'state-badge paused';
+            } else {
+                badge.textContent = 'IDLE';
+                badge.className = 'state-badge';
+            }
+        }
+
+        // ── SEND COMMAND ──
+        async function sendCommand(action) {
+            if (!SERVER) return;
+            let input = document.getElementById('durationInput').value.trim();
+            let body = {};
+
+            if (action === 'start' && input) {
+                // Sanitize input: replace dot/space with colon
+                input = input.replace(/[ .]/g, ':');
+                body.duration = input;
+            }
+
+            try {
+                const res = await fetch(`${SERVER}/timer/${action}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
+                    body: JSON.stringify(body)
+                });
+                if (!res.ok) throw new Error('Failed');
+                showToast(action.toUpperCase() + ' ✓', false);
+                fetchState();
+            } catch (e) {
+                showToast('ERROR — check server', true);
+            }
+        }
+
+        // ── SET CUSTOM TIME ──
+        async function setCustomTime() {
+            if (!SERVER) return;
+            let input = document.getElementById('durationInput').value.trim();
+            if (!input) { showToast('Enter a duration first', true); return; }
+
+            // Sanitize input
+            input = input.replace(/[ .]/g, ':');
+
+            try {
+                // Changed from start to set
+                const res = await fetch(`${SERVER}/timer/set`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'ngrok-skip-browser-warning': 'true',
+                        'Bypass-Tunnel-Reminder': 'true'
+                    },
+                    body: JSON.stringify({ duration: input })
+                });
+                if (!res.ok) throw new Error();
+                showToast('TIME SET ✓', false);
+                fetchState();
+            } catch {
+                showToast('ERROR — check format', true);
+            }
+        }
+
+        // ── TOAST ──
+        function showToast(msg, isError) {
+            const t = document.getElementById('toast');
+            t.textContent = msg;
+            t.className = 'toast show' + (isError ? ' error' : '');
+            setTimeout(() => t.className = 'toast', 2200);
+        }
+
+        // ── SMOOTH TICK ──
+        let serverEndTime = null;
+        let serverRunning = false;
+        let serverRemaining = 0;
+
+        // Ticking logic removed as socket provides updates per second
+        // But for smooth countdown between seconds, we can keep a local ticker if desired.
+        // For simplicity and sync accuracy, we rely on socket updates which are frequent enough (1s).
+        // If 1s updates feel jerky on mobile, we can re-add interpolation.
+        // Let's re-add a simple interpolator that runs effectively but corrects on socket update.
+
+        setInterval(() => {
+            if (!SERVER) return;
+            // logic to smooth out seconds if needed
+            // currently socket sends tick every second
+            // so we might not need this unless we want ms precision locally
+            const now = Date.now();
+            let remaining = 0;
+            if (serverRunning && serverEndTime) {
+                // Parse ISO string
+                const end = new Date(serverEndTime).getTime();
+                remaining = Math.max(0, end - now);
+                updateDisplay({
+                    isRunning: serverRunning,
+                    endTime: serverEndTime,
+                    remainingTime: remaining
+                });
+            }
+        }, 100);
+
+        // Format input
+        // Format input: Allow digits and convert separators to colons
+        document.getElementById('durationInput').addEventListener('input', function (e) {
+            let val = e.target.value;
+
+            // Convert common separators to colon
+            val = val.replace(/[\s\.\-,;]/g, ':');
+
+            // Remove illegal chars
+            val = val.replace(/[^0-9:]/g, '');
+
+            // Prevent double colons
+            val = val.replace(/:+/g, ':');
+
+            // Optional: Auto-insert colon after 2 chars if typing purely numbers?
+            // Let's keep it simple: just allow flexible separators.
+            // If the user types "10 00", it becomes "10:00". 
+            // If they type "10.00", it becomes "10:00".
+
+            e.target.value = val;
+        });
+    </script>
+</body>
+
+</html>

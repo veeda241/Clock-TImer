@@ -1,0 +1,23 @@
+{
+    "compilerOptions": {
+        "target": "ESNext",
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "skipLibCheck": true,
+        "allowJs": true,
+        "checkJs": false,
+        "noEmit": true,
+        "baseUrl": "."
+    },
+    "include": [
+        "server.js"
+    ],
+    "exclude": [
+        "node_modules",
+        "admin",
+        "client",
+        "dist",
+        "public",
+        ".*"
+    ]
+}

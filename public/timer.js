@@ -1,4 +1,5 @@
 /* Global Vars for Visualization */
+const socket = io();
 const timerDisplay = document.getElementById('timer-display');
 const statusTerminal = document.getElementById('terminal-line');
 const statusMessages = [
@@ -40,6 +41,8 @@ function updateTerminal() {
 
 /* Timer Logic */
 let finalMusicPlayed = false;
+let victoryPlayed = false;
+let videoPlayed = false;
 // Radius 90 -> Circumference = 2 * PI * 90 ~= 565.48
 const CIRCUMFERENCE_HOURS = 565.48;
 const CIRCUMFERENCE_MINUTES = 565.48;
@@ -56,10 +59,10 @@ function setProgress(id, value, max) {
     circle.style.strokeDashoffset = offset;
 }
 
-async function updateTimer() {
+async function updateTimer(state) {
     try {
-        const response = await fetch('/timer/state');
-        const state = await response.json();
+        if (!state) return;
+
 
         // Elements
         const timerContainer = document.getElementById('timer-container');
@@ -90,21 +93,71 @@ async function updateTimer() {
         // Music Logic
         if (state.running && Math.abs(state.timeLeft - state.initialDuration) < 1000) {
             finalMusicPlayed = false;
-            // Reset final music if timer reset
             if (finalMusic && !finalMusic.paused) {
                 finalMusic.pause();
                 finalMusic.currentTime = 0;
             }
+            victoryPlayed = false;
+            videoPlayed = false;
+            const endVideo = document.getElementById('end-video');
+            const videoOverlay = document.getElementById('video-overlay');
+            if (endVideo) { endVideo.pause(); endVideo.currentTime = 0; }
+            if (videoOverlay) videoOverlay.style.display = 'none';
         }
         if (state.isFinalMinutes && !finalMusicPlayed) {
             if (mainMusic) mainMusic.pause();
             if (finalMusic) finalMusic.play().catch(e => console.error("Final music play failed:", e));
             finalMusicPlayed = true;
+        } else if (!state.isFinalMinutes && state.running && !state.paused) {
+            // Play background anthem if not in final minutes, running, and not paused
+            if (mainMusic && mainMusic.paused) {
+                mainMusic.play().catch(e => console.log("Background music autoplay blocked:", e));
+            }
+        } else if (state.paused || !state.running) {
+            // Pause background music if timer is paused or stopped
+            if (mainMusic && !mainMusic.paused) {
+                mainMusic.pause();
+            }
+            if (finalMusic && !finalMusic.paused) {
+                finalMusic.pause();
+            }
         }
 
         // Timer Display Logic
-        if (state.timeLeft <= 0 && state.running) {
+        if (state.timeLeft <= 0 && state.initialDuration > 0) {
             // TIME'S UP
+            const endVideo = document.getElementById('end-video');
+            const videoOverlay = document.getElementById('video-overlay');
+            if (endVideo && videoOverlay && !videoPlayed) {
+                videoOverlay.style.display = 'flex';
+                // Reset video state
+                endVideo.currentTime = 0;
+                endVideo.muted = false; // Try unmuted
+
+                const playPromise = endVideo.play();
+
+                if (playPromise !== undefined) {
+                    playPromise.then(() => {
+                        console.log("Video playing");
+                    }).catch(error => {
+                        console.warn("Autoplay prevented. Muting and retrying.", error);
+                        endVideo.muted = true;
+                        endVideo.play();
+                    });
+                }
+                videoPlayed = true;
+
+                // When video ends, hide it? Or loop? Assuming loop or freeze.
+                // If it loops:
+                // endVideo.loop = true; 
+                // If you want it to hide after playing:
+                // endVideo.onended = () => { videoOverlay.style.display = 'none'; };
+            }
+
+            if (!victoryPlayed && window.triggerVictory) {
+                window.triggerVictory();
+                victoryPlayed = true;
+            }
             if (timerContainer) timerContainer.style.display = 'none';
             if (timesUpDisplay) {
                 timesUpDisplay.style.display = 'flex';
@@ -179,8 +232,22 @@ async function updateTimer() {
     }
 }
 
-setInterval(updateTimer, 1000);
-updateTimer();
+
+
+socket.on('timer-update', (data) => {
+    updateTimer(data);
+});
+
+socket.on('timer-tick', (data) => {
+    updateTimer(data);
+});
+
+// Request initial state logic if needed, or wait for first tick/update
+// But better to fetch once on load to ensure instant display
+fetch('/timer/state')
+    .then(res => res.json())
+    .then(data => updateTimer(data))
+    .catch(console.error);
 
 /* --- Canvas Particle Background Removed (Now handled by Grainient.js) --- */
 
@@ -198,6 +265,11 @@ document.addEventListener('DOMContentLoaded', () => {
             localStorage.setItem('musicIsMuted', isMuted);
             // Toggle Icon opacity or color
             muteBtn.style.opacity = isMuted ? '0.5' : '1';
+
+            // If we just unmuted, try to play if it was supposed to be playing
+            if (!isMuted && music.paused) {
+                music.play().catch(e => console.log("Play failed on unmute:", e));
+            }
         });
     }
 });
