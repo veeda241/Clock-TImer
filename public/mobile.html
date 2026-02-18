@@ -548,8 +548,6 @@
         // DATA MIGRATION: Fix bad URLs in storage immediately
         if (SERVER) {
             try {
-                // If it contains a filename or path, strip it back to origin
-                // e.g. http://10.0.0.1:3000/mobile.html -> http://10.0.0.1:3000
                 const urlObj = new URL(SERVER);
                 if (urlObj.pathname.length > 1) {
                     SERVER = urlObj.origin;
@@ -562,10 +560,15 @@
 
         let socket;
 
+        // AUTO-DETECT: If the page is served from the actual server (not a file://),
+        // use the current origin automatically — no localStorage needed.
+        if (!SERVER && window.location.protocol !== 'file:' && window.location.hostname !== '') {
+            SERVER = window.location.origin;
+        }
+
         // Initialize
         if (!SERVER || !(SERVER.includes('.') || SERVER.includes('localhost') || SERVER.includes('127.0.0.1'))) {
-            // Invalid or missing, show setup
-            localStorage.removeItem('server_url'); // Clear bad data
+            localStorage.removeItem('server_url');
             SERVER = null;
             document.getElementById('setup-modal').style.display = 'flex';
         } else {

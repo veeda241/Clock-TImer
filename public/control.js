@@ -11,6 +11,12 @@ if (SERVER_URL) {
         }
     } catch (e) { }
 }
+
+// AUTO-DETECT: If served from the actual server, use current origin
+if (!SERVER_URL && window.location.protocol !== 'file:' && window.location.hostname !== '') {
+    SERVER_URL = ''; // Use relative URLs (same origin)
+}
+
 const socket = SERVER_URL ? io(SERVER_URL, {
     extraHeaders: {
         "ngrok-skip-browser-warning": "true"
