@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hackathon Attendance - QR Code Generator</title>
+    <meta name="description" content="Generate and download QR codes for hackathon team attendance tracking">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <!-- Hero Section -->
+    <header class="hero" id="hero">
+        <div class="hero-bg-animation"></div>
+        <div class="hero-content">
+            <div class="logo-badge">
+                <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                    <rect x="4" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2.5"/>
+                    <rect x="28" y="4" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2.5"/>
+                    <rect x="4" y="28" width="16" height="16" rx="2" stroke="currentColor" stroke-width="2.5"/>
+                    <rect x="28" y="28" width="8" height="8" rx="1" fill="currentColor"/>
+                    <rect x="38" y="28" width="6" height="6" rx="1" fill="currentColor"/>
+                    <rect x="28" y="38" width="6" height="6" rx="1" fill="currentColor"/>
+                    <rect x="38" y="38" width="6" height="6" rx="1" fill="currentColor"/>
+                    <rect x="8" y="8" width="8" height="8" rx="1" fill="currentColor"/>
+                    <rect x="32" y="8" width="8" height="8" rx="1" fill="currentColor"/>
+                    <rect x="8" y="32" width="8" height="8" rx="1" fill="currentColor"/>
+                </svg>
+            </div>
+            <h1>Hackathon Attendance</h1>
+            <p class="hero-subtitle">QR Code Generator for 75 Teams</p>
+            <p class="hero-description">Generate scannable QR codes for each team. Scan with any camera to instantly identify the team number.</p>
+            <div class="hero-actions">
+                <button class="btn btn-primary" id="generateBtn" onclick="generateAllQR()">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Generate All QR Codes
+                </button>
+                <button class="btn btn-secondary" id="downloadAllBtn" onclick="downloadAllQR()" style="display:none;">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 3V13M10 13L6 9M10 13L14 9" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                        <path d="M3 15V16C3 16.5523 3.44772 17 4 17H16C16.5523 17 17 16.5523 17 16V15" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                    Download All as ZIP
+                </button>
+                <button class="btn btn-outline" id="printBtn" onclick="printQRCodes()" style="display:none;">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <rect x="4" y="8" width="12" height="8" rx="1" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M6 8V3H14V8" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M4 12H2V15C2 15.5523 2.44772 16 3 16H4" stroke="currentColor" stroke-width="1.5"/>
+                        <path d="M16 12H18V15C18 15.5523 17.5523 16 17 16H16" stroke="currentColor" stroke-width="1.5"/>
+                        <line x1="7" y1="11" x2="13" y2="11" stroke="currentColor" stroke-width="1.5"/>
+                        <line x1="7" y1="13.5" x2="13" y2="13.5" stroke="currentColor" stroke-width="1.5"/>
+                    </svg>
+                    Print All
+                </button>
+            </div>
+        </div>
+        <div class="stats-bar" id="statsBar" style="display:none;">
+            <div class="stat-item">
+                <span class="stat-number" id="totalGenerated">0</span>
+                <span class="stat-label">QR Codes Generated</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">Camera Scan</span>
+                <span class="stat-label">Compatible</span>
+            </div>
+            <div class="stat-divider"></div>
+            <div class="stat-item">
+                <span class="stat-number">Instant</span>
+                <span class="stat-label">Team Identification</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Progress Bar -->
+    <div class="progress-container" id="progressContainer" style="display:none;">
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <span class="progress-text" id="progressText">Generating...</span>
+    </div>
+
+    <!-- QR Code Grid -->
+    <main class="qr-grid-container" id="qrGridContainer" style="display:none;">
+        <div class="grid-header">
+            <h2>Team QR Codes</h2>
+            <p>Click any QR code to download it individually</p>
+        </div>
+        <div class="qr-grid" id="qrGrid"></div>
+    </main>
+
+    <!-- Print Layout (hidden, used for printing) -->
+    <div class="print-layout" id="printLayout"></div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
